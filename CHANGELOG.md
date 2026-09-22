@@ -73,8 +73,8 @@ packages too.
   fullest of these — settings *do* exist in Core, they simply always resolve to their declared
   default.
 
-A Core-only host therefore receives five full skills and five stubs; an SDK host receives ten full
-skills.
+A Core-only host therefore receives **four** full skills and **five** stubs; an SDK host receives
+all nine in full.
 
 ### Why this package exists
 
@@ -105,6 +105,6 @@ The failure mode is silent: a scripted install reports success and simply instal
 ### Verified
 
 Rendered and installed against two hosts covering both conditions — a Core-only host with no SDK,
-and a host carrying Core and SDK. The guideline and all ten skills render with no Blade residue in
+and a host carrying Core and SDK. The guideline and all nine skills render with no Blade residue in
 either, the guarded sections appear and disappear as intended, and `references/` directories travel
 with their skills.
