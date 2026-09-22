@@ -1,0 +1,6 @@
+# What a `composer require` must NOT drag along. `resources/` is the package —
+# it is deliberately absent from this list.
+/.github            export-ignore
+/.gitattributes     export-ignore
+/.gitignore         export-ignore
+/CHANGELOG.md       export-ignore

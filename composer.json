@@ -1,0 +1,38 @@
+{
+    "name": "laravelui5/chiron",
+    "description": "AI agent guidelines and skills for the LaravelUi5 stack — read by Laravel Boost, so a coding agent writes laravelui5/* correctly instead of guessing.",
+    "type": "library",
+    "license": "MIT",
+    "keywords": [
+        "laravel",
+        "laravel-boost",
+        "boost",
+        "ai",
+        "agent-skills",
+        "laravelui5",
+        "ui5",
+        "openui5",
+        "odata"
+    ],
+    "homepage": "https://laravelui5.com",
+    "authors": [
+        {
+            "name": "Michael Gerzabek",
+            "homepage": "https://laravelui5.com",
+            "role": "Author"
+        }
+    ],
+    "support": {
+        "docs": "https://laravelui5.com",
+        "issues": "https://github.com/laravelui5/chiron/issues",
+        "source": "https://github.com/laravelui5/chiron"
+    },
+    "suggest": {
+        "laravel/boost": "Reads the guidelines and skills this package ships (--dev).",
+        "laravelui5/odata": "The MIT OData v4 engine these guidelines teach.",
+        "laravelui5/core": "The metadata engine these guidelines teach.",
+        "laravelui5/sdk": "The production runtime these guidelines teach."
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
