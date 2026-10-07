@@ -33,6 +33,11 @@
         "laravelui5/core": "The metadata engine these guidelines teach.",
         "laravelui5/sdk": "The production runtime these guidelines teach."
     },
+    "conflict": {
+        "laravelui5/odata": ">=4.0",
+        "laravelui5/core": ">=3.0",
+        "laravelui5/sdk": ">=2.0"
+    },
     "minimum-stability": "stable",
     "prefer-stable": true
 }

@@ -8,6 +8,22 @@ packages it describes.
 Each release names the majors it was written against. A guideline that only holds for one major says
 so inline rather than forking the file.
 
+## [1.1.0] – 2026-10-07
+
+Written against **odata 3.x · core 2.x · sdk 1.x** — and now Composer holds it to that.
+
+### Added
+
+- **`conflict` on the next major of each package it teaches:** `laravelui5/odata >=4.0`,
+  `laravelui5/core >=3.0`, `laravelui5/sdk >=2.0`. Until 1.0.0 the binding to a major was a sentence
+  in this changelog; a host that moved to the next major kept getting guidance for the previous one,
+  silently — plausible and wrong, which is worse for an agent than no guidance at all. Composer now
+  refuses that combination, and the fix is to update Chiron. The bound is only an upper one and only
+  on what is installed: requiring Chiron on its own, before the stack, still works.
+- **The cost, stated:** a major of odata, Core or the SDK can only be installed alongside Chiron once
+  a Chiron release has raised the bound. That couples the two cadences at the major and nowhere
+  else; prose fixes inside a major still ship on Chiron's own tag.
+
 ## [1.0.0] – 2026-09-22
 
 Written against **odata 3.x · core 2.x · sdk 1.x**.
