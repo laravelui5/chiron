@@ -8,6 +8,44 @@ packages it describes.
 Each release names the majors it was written against. A guideline that only holds for one major says
 so inline rather than forking the file.
 
+## [1.2.0] – 2026-10-07
+
+Written against **odata 3.x · core 2.x · sdk 1.x**. The OData guidance follows **odata 3.1**; what is
+new in 3.1 is marked so inline, per the rule in the README.
+
+### Fixed
+
+- **The discovery skill taught the form that breaks a model.** `references/discovery.md` showed
+  `#[ODataProperty(...)] public $amount;` and `#[ODataIgnore] public $internalNote;`. A plain declared
+  property shadows Eloquent's attribute bag: reads return `null`, writes are lost on `save()`. The
+  samples now use PHP 8.4 property hooks with a **block** `set` and nullable types. The arrow form
+  `set($v) => $this->setAttribute(…)` assigns the returned model and throws on direct assignment,
+  and the reference says so. The guideline and the skill's *not to do* list carry the rule.
+
+### Added
+
+- **`references/annotations.md`** (new): vocabulary terms as attributes, `Path` values,
+  `annotateContainer()`, and the three pieces of the code-list wiring UI5 needs to format currencies
+  and units per row. It includes the rules that cost a debugging session: a null
+  `UnitSpecificScale` renders amounts empty, code lists must not be paged, texts follow
+  `Accept-Language`, and `preserveDecimals` decides whether input is checked.
+- **Discovery (odata 3.1):** facets from the column (`Nullable`, `Precision`/`Scale`, `MaxLength`);
+  `#[ODataEntity(useHidden: true)]` and why a model with secrets in `$hidden` needs it; `nullable:`,
+  `precision:` and `scale:` overrides; `ColumnFacetResolverInterface` for installation facts and its
+  interplay with `odata:cache`; polymorphic relations stay out of discovery, with the explicit
+  alternatives.
+- **Consuming (odata 3.1):** `$filter` refuses what it cannot translate (`501`/`400`, never a silent
+  drop), `tolower`/`toupper`, literal `$search`, typed and quoted key literals, `nextLink` that
+  repeats the request, `$count` inside `$expand`, `IEEE754Compatible`.
+- **Custom entity sets (odata 3.1):** built by the container, the `parent::__construct()` rule,
+  declared types on the wire (no casts in row maps), `any`/`all` refused on a SQL source.
+
+### Changed
+
+- **README:** the skill listing shows all nine skills, grouped by the package each teaches. It used
+  to show three. The versioning section says that version-specific guidance, a minor included, is
+  marked inline.
+
 ## [1.1.0] – 2026-10-07
 
 Written against **odata 3.x · core 2.x · sdk 1.x** — and now Composer holds it to that.

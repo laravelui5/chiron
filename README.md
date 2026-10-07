@@ -35,15 +35,32 @@ break, because it does not run.
 ```
 resources/boost/
 ├── guidelines/core.blade.php          always loaded; sections render only for what you installed
-└── skills/
-    ├── laravelui5-odata-modeling/     modelling a read surface: the decision tree, the perf gate
-    ├── laravelui5-actions/            authoring a Ui5Action — every write in the stack is one
-    └── laravelui5-dialogs/            global dialogs as shell-dispatched artifacts
+└── skills/                            loaded on demand, when the task matches
+    │                                  — laravelui5/odata —
+    ├── laravelui5-odata-modeling/     a read surface: the decision tree, the perf gate, discovery,
+    │                                  custom entity sets, annotations and code lists, the URL surface
+    │                                  — laravelui5/core —
+    ├── laravelui5-modules/            the module as a Composer package: ui5:app/ui5:lib, registration,
+    │                                  how the UI5 sources reach the browser
+    ├── laravelui5-artifacts/          which artifact to use (app, card, tile, chart, dashboard, report,
+    │                                  resource …), and the provider behind it
+    ├── laravelui5-actions/            every write is a Ui5Action; the handler contract adapts to
+    │                                  Core-only or SDK installations
+    │                                  — laravelui5/sdk —
+    ├── laravelui5-dialogs/            global dialogs as shell-dispatched artifacts
+    ├── laravelui5-security/           time-aware RBAC: #[Access], #[Act], See, #[Read], scoped roles
+    ├── laravelui5-partners/           the partner model: the actor, org partners, the four "roles"
+    ├── laravelui5-settings/           Setting vs Slot vs Customizing, and how each is declared
+    └── laravelui5-shell/              LeanShell: navigation, command palette, help, value helps, intents
 ```
 
 For the same reason it declares **no `require`**. Nothing here is executed, so nothing here has a
 platform requirement — and a `php` constraint would only stop someone from installing the package
 before they install the stack, which is one of the moments it is most useful.
+
+A skill's `SKILL` file is the short instruction an agent loads first. Where a topic is large
+(OData modelling, artifacts, security, settings), the detail sits in the skill's `references/` folder,
+and the agent reads only the part it is working on.
 
 ## One package for three, on purpose
 
@@ -100,8 +117,8 @@ against, and its `composer.json` **enforces** that with a `conflict` on the next
 So guidance never outlives the major it was written for. Moving your app to the next major of any of
 the three needs a Chiron release that covers it, and Composer says so instead of handing your agent
 instructions for the version you just left. Requiring Chiron before you install the stack is
-unaffected — a conflict only applies to what is installed. Guidance that only applies to one major
-within the range says so inline.
+unaffected — a conflict only applies to what is installed. Guidance that depends on a particular
+version within the range — a major, or a minor such as *since odata 3.1* — says so inline.
 
 ## Links
 

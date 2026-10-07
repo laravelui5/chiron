@@ -42,6 +42,18 @@ and streams the result rather than buffering it.
 narrow the row set before OData touches it. Override it, return a Builder, and the engine never asks
 why the rows are what they are.
 
+Three things about the class itself:
+
+- **It is built by the container** (since 3.1), so constructor dependencies are injected. A set with
+  its own constructor **must call `parent::__construct()`**, which wires the set as its own query
+  source. The dependency has to be resolvable when the schema is built. Anything that needs the
+  current request belongs in `query()`, not in the constructor.
+- **The wire carries the type `columns()` declares**, whatever the driver returns. A computed
+  `case when … then 1 else 0 end` declared `Edm.Boolean` goes out as `true`/`false`. Do not cast in
+  the query or in a row map.
+- **There are no relations to follow**, so `any`/`all` in `$filter` answer `501` here, and `$expand`
+  is not resolved on a custom set (a known gap on the package roadmap).
+
 ## Backed enums become `Edm.EnumType`
 
 The columnar contract accepts an **int-backed enum class-string** as a column type, not just an EDM

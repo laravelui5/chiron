@@ -10,7 +10,8 @@ description: >-
   streaming rows rather than hydrating models. Triggers: "add an entity set", "expose this model
   over OData", "OData read", "master/detail", "$expand", "$filter", "$metadata", "discoverModel",
   "custom entity set", "AbstractEntitySet", "virtual expand", "the OData list is slow", "how do I
-  filter/sort/page this", "expose an enum over OData", "odata:cache".
+  filter/sort/page this", "expose an enum over OData", "odata:cache", "annotation", "currency/unit
+  decimals in UI5", "code list", "hide a column from OData", "$hidden".
 license: MIT
 metadata:
   author: laravelui5
@@ -91,13 +92,18 @@ discovered `Orders` *collection* on a large table — that is what `OrderList` i
   relations as navigation properties, and virtual expands (contract and scope).
 - **`references/custom-entity-sets.md`** — when a custom set is justified, the measured numbers,
   the `columns()` contract, backed enums as `Edm.EnumType`, streaming.
-- **`references/consuming.md`** — the URL surface, `$batch`, read authorization behaviour, caching,
-  and what the common clients expect.
+- **`references/annotations.md`** — vocabulary terms, `Path` values, container annotations, and the
+  code lists UI5 needs to format currencies and units per row.
+- **`references/consuming.md`** — the URL surface and how the engine answers it (`$filter`, keys,
+  paging, `IEEE754Compatible`), `$batch`, read authorization behaviour, caching, and what the
+  common clients expect.
 
-## Three things not to do
+## Four things not to do
 
 - **Do not write a controller, API resource or `?include=` convention** for data an OData service
   already serves. Declaring the service is the endpoint.
 - **Do not hand-write or edit CSDL.** `$metadata` is generated from the model and the annotations.
 - **Do not add `#[ODataEntity]` or `#[ODataNavigation]` for their own sake.** They exist to
   override what discovery already derives correctly.
+- **Do not declare a plain `public $column;` on an Eloquent model** to hang an attribute on. It
+  shadows the attribute bag. Use a hooked property with a block `set` (see `references/discovery.md`).

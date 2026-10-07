@@ -39,6 +39,13 @@ the API.
   the generated document.
 - **Never convert a large-list custom entity set to `discoverModel()` for consistency.** See the
   performance gate below; that trade is the one expensive mistake.
+- **Never declare a plain `public $column;` on an Eloquent model** to attach an OData attribute. It
+  shadows the attribute bag: reads return `null`, writes are lost on `save()`. Use a PHP 8.4 property
+  with hooks, and write the `set` hook as a block (`set(?string $v) { $this->setAttribute('col', $v); }`).
+  The arrow form assigns the returned model to the property and throws on direct assignment.
+- **Never leave secrets declared in `$metadata`.** `$hidden` keeps a column out of the rows but not
+  out of the schema, and a declared column is filterable. Put `#[ODataEntity(useHidden: true)]` on
+  models with `$hidden` columns (odata 3.1+).
 
 ### Declaring a service
 
@@ -82,10 +89,12 @@ A custom entity set on a big list is not legacy debt to modernize — it is the 
 ### Operational
 
 `php artisan odata:cache` pre-compiles the EDM so no discovery happens at request time. Run it on
-deploy and re-run it after changing a discovered model, an attribute or an annotation.
+deploy and re-run it after changing a discovered model, an attribute, an annotation, or an
+installation fact that a bound `ColumnFacetResolverInterface` reads; the cache freezes its answer.
 
 **For anything beyond this — the five-step modelling decision tree, discovery attributes, custom
-entity sets, virtual expands, consuming the service — use the `laravelui5-odata-modeling` skill.**
+entity sets, virtual expands, annotations and code lists, consuming the service — use the
+`laravelui5-odata-modeling` skill.**
 @endif
 
 @if (class_exists(\LaravelUi5\Core\CoreLibrary::class))
