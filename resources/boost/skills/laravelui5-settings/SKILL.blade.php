@@ -3,7 +3,7 @@ name: laravelui5-settings
 description: >-
   Make something configurable in LaravelUi5 — and pick the right one of the three mechanisms that
   look alike. A Setting answers "how is this configured" (a threshold, a limit, a switch) and is
-  declared on an artifact; a Slot answers "in what context" (currency, locale, time zone) and is
+  declared on an artifact; a Slot answers "in what context" (locale, time zone, period) and is
   declared on a module; Customizing is a code-owned reference catalog (role codes, document types)
   projected into tables by ui5:sync. Covers #[Setting], #[Slot], EditLevel, the five-scope
   precedence ladder, who may write what, and Customizing vs Tailoring. Triggers: "make this
@@ -47,13 +47,16 @@ This is where most of the confusion in the stack lives. Ask what *kind* of thing
 
 | | **Setting** | **Slot** | **Customizing** |
 |:---|:---|:---|:---|
-| Answers | *how is this configured* — a threshold, a limit, a switch | *in what context* — currency, locale, time zone | *what vocabulary exists* — role codes, document types, tax codes |
+| Answers | *how is this configured* — a threshold, a limit, a switch | *in what context* — locale, time zone, reporting period | *what vocabulary exists* — role codes, document types, tax codes |
 | Declared on | an **artifact** class | a **module** class | an attribute, per catalog row |
 | Belongs to | the configuration | **the person** | your code |
 | Changed in | the Settings app | the **Partners** app (Parameters tab) | nowhere — it is redeployed |
 
 **The short test: if a value belongs to the person rather than to the configuration, declare a
-slot.** Core ships currency, locale and time zone as slots for exactly that reason.
+slot.** Core ships locale, time zone and the reporting period as slots for exactly that reason.
+The **base currency is not a slot** (removed in core 3.0): an installation has one, and no request
+overrides it. Read a slot anywhere with `$context->slot(CoreSlots::Period)` (core 3.0); slot values
+come from the query string, never from the path or the body.
 
 ## `#[Setting]` — declare it on the artifact
 
@@ -70,8 +73,9 @@ class InvoicingApp extends AbstractUi5App { /* … */ }
 `ui5:sync` writes each declared setting as the `Platform` row of that artifact, after which it
 appears in the Settings app under the artifact's title.
 
-**Reports are the exception**: a report provider gets no settings injected. Parameterise a report
-with slots instead.
+Since core 3.0 the artifact's settings are injected into every handler and provider that extends
+`AbstractConfigurable` — Action, Resource, Card, Tile, Chart and Report alike (on core 2.x, Tile,
+Chart and Report providers got none). Settings are read-only: writing `$this->pageSize = 5` throws.
 
 ## `#[Slot]` — declare it on the module
 

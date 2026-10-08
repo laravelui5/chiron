@@ -34,20 +34,28 @@ and reflected in the interface.
 Modules are scaffolded alongside their root artifact:
 
 ```bash
-php artisan ui5:app Users --create \
-    --vendor="Acme GmbH" --php-ns-prefix=Acme --js-ns-prefix=com.acme --package-prefix=acme
+php artisan ui5:app Users --create --package-prefix=acme --php-ns-prefix=Acme --vendor="Acme GmbH"
 # → UsersModule + UsersApp
 
-php artisan ui5:lib Core --create --php-ns-prefix=Acme --js-ns-prefix=com.acme
+php artisan ui5:lib Core --create --package-prefix=acme --php-ns-prefix=Acme
 # → CoreModule + CoreLibrary
 ```
+
+**The identity options are required on `--create` and have no defaults** (core 3.0; on core 2.x the
+generators fell back to `pragmatiqu` / `Pragmatiqu` / `io.pragmatiqu` — always pass them). They name
+the user's vendor: ask for them, never invent them. A missing or malformed one aborts before anything
+is written. `--refresh` needs none. A library takes its vendor from `.library`, so `ui5:lib` has no
+`--vendor`.
 
 `ui5:app` expects a UI5 source project to exist already, in one of:
 
 ```
-../ui5-offers/          ← LaravelUi5 naming convention
-../com.acme.offers/     ← SAP Easy UI5 convention
+../ui5-offers/          ← LaravelUi5 naming convention, always searched
+../com.acme.offers/     ← SAP Easy UI5 convention, searched with --js-ns-prefix=com.acme
 ```
+
+`--js-ns-prefix` only widens that search. The UI5 namespace itself comes from the source project
+(`sap.app/id`, or `<name>` in `.library`).
 
 **If no source project exists yet, scaffold it first** with SAP's Easy UI5 generator — run
 `yo easy-ui5` and pick the app or library sub-generator. Two things about that run matter here:
@@ -99,7 +107,8 @@ Only business modules go in this list.)*
 ## Wiring it as a real package
 
 The module gets its own `composer.json`: the package name, a PSR-4 root over `src/`, and its service
-provider under `extra.laravel.providers`. The host then takes it like any package:
+provider under `extra.laravel.providers` — for an app, and since core 3.0 for a library too
+(`ui5-charts-lib` → `ui5/Charts` → `acme/charts`). The host then takes it like any package:
 
 ```bash
 composer config repositories.invoicing path ui5/Invoicing

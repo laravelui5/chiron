@@ -37,8 +37,9 @@ under `ui5/{App}/src/Actions/`:
 - `Handler/{Name}Handler.php` — the state-changing logic (the **typed** handler, below)
 
 The generator does **not** register the action, wire a FormRequest, or authorize it — those are
-yours, and how you authorize depends on what is installed (below). The UI5 namespace is derived as `{module.namespace}.actions.{snake_name}`
-(e.g. `com.laravelui5.partners.actions.create_group`).
+yours, and how you authorize depends on what is installed (below). The UI5 namespace is derived as `{module.namespace}.actions.{kebab-name}`
+(e.g. `com.acme.invoicing.actions.clear-mailbox`; core 2.x used snake_case, which existing actions such as
+`com.laravelui5.partners.actions.create_group` keep).
 
 @if (class_exists(\LaravelUi5\Sdk\SdkServiceProvider::class))
 ## The typed contract (the current pattern the scaffolder emits)
@@ -261,7 +262,7 @@ use LaravelUi5\Core\Ui5\Enums\HttpMethod;
 
 class ClearMailboxAction extends AbstractUi5Action
 {
-    public const string NAMESPACE = 'com.acme.invoicing.actions.clear_mailbox';
+    public const string NAMESPACE = 'com.acme.invoicing.actions.clear-mailbox';
     public const string VERSION   = '1.0.0';
 
     public function getMethod(): HttpMethod { return HttpMethod::POST; }
@@ -352,7 +353,7 @@ the work.
 
 @verbatim
 <code-snippet name="Calling the action from UI5" lang="js">
-const result = await LaravelUi5.call("com.acme.invoicing.actions.clear_mailbox", { before: "2026-01-01" });
+const result = await LaravelUi5.call("com.acme.invoicing.actions.clear-mailbox", { before: "2026-01-01" });
 </code-snippet>
 @endverbatim
 

@@ -8,6 +8,25 @@ packages it describes.
 Each release names the majors it was written against. A guideline that only holds for one major says
 so inline rather than forking the file.
 
+## [1.3.0]
+
+Follows **core 3.0** where it differs from 2.x; each difference is marked inline with its version.
+
+### Changed
+
+- **`laravelui5-modules`: the identity options are required.** The scaffolding examples pass
+  `--package-prefix`, `--php-ns-prefix` and (for an app) `--vendor`, say that core 3.0 refuses a
+  `--create` without them, and that `--js-ns-prefix` only widens the search for an Easy UI5 source
+  folder. A library is a package since core 3.0 (`ui5-charts-lib` → `ui5/Charts` → `acme/charts`).
+- **`laravelui5-actions`: kebab-case namespaces.** A scaffolded action's namespace ends in kebab-case
+  since core 3.0 (`actions.clear-mailbox`); existing snake_case namespaces stay valid.
+- **`laravelui5-settings`: settings reach every provider.** The "reports are the exception" note is
+  replaced: since core 3.0 Tile, Chart and Report providers receive their artifact's settings too,
+  and writing to a setting throws.
+- **`laravelui5-settings`: no currency slot.** The slot examples are locale, time zone and period;
+  the skill says the base currency is not a slot (removed in core 3.0), that a slot is read anywhere
+  with `$context->slot()`, and that slot values come from the query string only.
+
 ## [1.2.0] – 2026-10-07
 
 Written against **odata 3.x · core 2.x · sdk 1.x**. The OData guidance follows **odata 3.1**; what is
