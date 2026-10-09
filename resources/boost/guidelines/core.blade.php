@@ -187,7 +187,8 @@ from the code into tables by `php artisan ui5:sync`, and a row's id does not exi
 
 **`migrate → sync → cache`, in that order, every deploy.** It is a hard contract, not a
 recommendation: `ui5:cache` writes references that carry DB ids, so caching before syncing caches
-ids that are not there yet.
+ids that are not there yet. Since sdk 2.0 `ui5:sync` ends with `ui5:cache` itself, and a gate that is
+declared but not synced is closed, not open.
 
 **If a newly declared ability, role or artifact "does not work", run `ui5:sync` before debugging
 anything else.** Code changes alone do not reach the runtime.

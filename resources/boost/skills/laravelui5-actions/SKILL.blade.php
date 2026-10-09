@@ -62,10 +62,10 @@ autowire); `getRequest()` returns the **FormRequest class-string** that validate
 #[Act('createGroup', SdkRole::TenantAdmin, note: 'Create a security group definition.')]
 class CreateGroupAction extends AbstractUi5Action
 {
-    public const NAMESPACE = 'com.laravelui5.partners.actions.create_group';
-    public const VERSION = '1.0.0';
-    public const TITLE = 'Create Group';
-    public const DESCRIPTION = 'Create a security group definition.';
+    public const string NAMESPACE = 'com.laravelui5.partners.actions.create_group';
+    public const string VERSION = '1.0.0';
+    public const string TITLE = 'Create Group';
+    public const string DESCRIPTION = 'Create a security group definition.';
 
     public function getMethod(): HttpMethod { return HttpMethod::POST; }
     public function getHandler(): string { return CreateGroupHandler::class; }

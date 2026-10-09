@@ -71,11 +71,11 @@ use LaravelUi5\Sdk\Ui5\AbstractUi5Dialog;
 #[Access(ability: 'createCompanyDialog', role: SdkRole::LocalAdmin, note: 'Create a company partner')]
 class CreateCompanyDialog extends AbstractUi5Dialog
 {
-    public const NAMESPACE = 'com.acme.partners.dialogs.create_company';
-    public const VERSION = '1.0.0';
-    public const TITLE = 'Create Company';
-    public const DESCRIPTION = 'Create a new company partner.';
-    public const VIEW = 'com.acme.partners.view.dialogs.CreateCompany'; // dotted; the framework slashes it
+    public const string NAMESPACE = 'com.acme.partners.dialogs.create_company';
+    public const string VERSION = '1.0.0';
+    public const string TITLE = 'Create Company';
+    public const string DESCRIPTION = 'Create a new company partner.';
+    public const string VIEW = 'com.acme.partners.view.dialogs.CreateCompany'; // dotted; the framework slashes it
 }
 ```
 
@@ -165,8 +165,10 @@ signal the list to refresh (component event bus) and close the dialog.
 
 - `#[Access]` on the dialog is the **open gate** (checked before the dialog appears). `#[Act]` on
   the create Action is the **write gate**. Two layers.
-- Both are **inert until `php artisan ui5:sync`** — the resolver reads the synced DB, not live
-  attributes. Before sync, the gate is Open. Run `ui5:sync` (+ `ui5:cache` in prod) after adding.
+- Both need **`php artisan ui5:sync`** — the gate's id comes from the synced DB. Before sync the
+  dialog's gate is **closed**: it does not open, and since sdk 2.0 it does not show in the palette
+  either and the log names `ui5:sync`. Run `ui5:sync` after adding (on sdk 1.x also `ui5:cache` in
+  prod; since sdk 2.0 the sync ends with it).
 
 ## Gotchas (learned the hard way)
 
@@ -197,7 +199,7 @@ registered in `PartnersModule::getDialogs()`; the views/controllers in
 
 ## Checklist
 
-- [ ] PHP artifact extends `AbstractUi5Dialog`; five consts incl. `VIEW`; registered in `getDialogs()`.
+- [ ] PHP artifact extends `AbstractUi5Dialog`; five typed consts (`public const string …`) incl. `VIEW`; registered in `getDialogs()`.
 - [ ] `#[Access(ability, SdkRole::…, note)]` on the dialog; `ui5:sync` to activate.
 - [ ] View root is a single `sap.m.Dialog`; body is `Form` + `ColumnLayout` (not `SimpleForm`).
 - [ ] Controller has `initDialog(dialog)` + `onCancel`/`onSave`; app `Component` extends `BaseComponent`.

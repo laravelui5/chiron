@@ -55,13 +55,17 @@ page. An ungated artifact is public to every signed-in partner.
 **Access, Act and Read are enforced on the server. `See` only shapes the screen** — never treat it
 as protection. A hidden button is a nicer UI, not a closed door.
 
-## The trap that costs the most: `#[Access]` does not gate OData
+## The trap that costs the most: which gate reaches OData
 
-An app's `#[Access]` gates **opening the app**, not its OData endpoint.
+**Since sdk 2.0** an app's `#[Access]` also gates its OData sets; a set with its own `#[Read]` is read
+by that alone — that is how a value-help scope opens to the picker's users. Bind that `#[Read]` to the
+same role as the picker's `#[Access]`, never to a catch-all role like `SdkRole::User`.
+
+**On sdk 1.x** an app's `#[Access]` gates **opening the app**, not its OData endpoint:
 
 > **An entity set without `#[Read]` can be read by every signed-in partner.**
 
-Gate every set that is not meant for everyone. See `references/read-gate.md`.
+There, gate every set that is not meant for everyone. See `references/read-gate.md`.
 
 ## Declaring an ability
 
