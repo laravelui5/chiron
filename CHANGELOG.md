@@ -8,7 +8,7 @@ packages it describes.
 Each release names the majors it was written against. A guideline that only holds for one major says
 so inline rather than forking the file.
 
-## [1.4.0]
+## [1.4.0] - unreleased – SDK 2.0.0
 
 Follows **sdk 2.0** where it differs from 1.x; each difference is marked inline with its version.
 
