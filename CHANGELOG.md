@@ -8,25 +8,31 @@ packages it describes.
 Each release names the majors it was written against. A guideline that only holds for one major says
 so inline rather than forking the file.
 
-## [1.4.0] - unreleased – SDK 2.0.0
+## [1.4.0] - unreleased – Core 4.0.0
 
-Follows **sdk 2.0** where it differs from 1.x; each difference is marked inline with its version.
+Written against **odata 3.x · core 4.x · sdk 1.x**, and Composer holds it to that: `conflict` names
+`laravelui5/core <4.0 || >=5.0`. The guidance describes Core 4 as it is; it no longer carries the forms
+of earlier Core majors. The SDK guidance stays on sdk 1.x, except where Core 4 moved something into the
+SDK (the dialog's type and contract); sdk 2.0 follows in the next release.
 
 ### Changed
 
-- **`laravelui5-security`: the read gate since sdk 2.0.** The skill and its read-gate reference say
-  which gate reaches a set: its own `#[Read]`, else the app's `#[Access]` — and that a value-help scope
-  opens to the picker's users through a `#[Read]` bound to the same role as the picker's `#[Access]`.
-- **A declared but unsynced gate is closed since sdk 2.0** (`laravelui5-security`, `laravelui5-dialogs`,
-  the core guideline): Read and Access alike, logged with a pointer to `ui5:sync`, and `ui5:sync`
-  ends with `ui5:cache`. The dialog skill no longer says the gate is open before the sync — for the
-  open intent it never was. The sdk 1.x rule (a set without
-  `#[Read]` is readable by every signed-in partner) stays, marked as such.
-- **Identity constants carry their type.** The examples in `laravelui5-dialogs`, `laravelui5-actions`
-  and the reports reference write `public const string NAMESPACE`, `VERSION`, `TITLE`, `DESCRIPTION`
-  and `VIEW`, and the dialog checklist asks for it. Valid on core 3 and every SDK line; required for
-  `VIEW` since sdk 2.0, whose dialog and value-help bases declare it `?string`, so an untyped `VIEW` no
-  longer loads.
+- **A module names its artifacts in two constants** (`laravelui5-modules`, `laravelui5-artifacts`,
+  `laravelui5-actions`, `laravelui5-dialogs`, the core guideline). The root — the app or library — is
+  `ARTIFACT_ROOT`, every other artifact a class name in `ARTIFACTS`; the getters (`getCards()`,
+  `getActions()`, `getDialogs()` …) are gone. The examples and checklists say so, and that a module
+  without its root fails at boot.
+- **Identity constants carry their type** — `public const string NAMESPACE`, `VERSION`, `TITLE`,
+  `DESCRIPTION`, and `VIEW` on a dialog. Required since core 4.0, whose artifact bases declare them
+  `?string`: an untyped one no longer loads.
+- **The artifact types belong to their layer.** An action is `CoreArtifactType::Action`; a dialog is
+  `SdkArtifactType::Dialog`, and its contract `Ui5DialogInterface` lives in
+  `LaravelUi5\Sdk\Ui5\Contracts`.
+
+### Fixed
+
+- **1.3.0 excluded the major it taught.** Its `conflict` still read `laravelui5/core >=3.0` while its
+  guidance followed core 3.0, so it could not be installed beside Core 3.
 
 ## [1.3.0]
 

@@ -56,9 +56,9 @@ class RevenueTile extends AbstractUi5Tile
 (`getProvider()`, `getTileProvider()`, `getHandler()`), and the runtime resolves it from the
 container. So constructor dependencies autowire — put services there.
 
-**4. Registration is two steps and there is no third.** Return the artifact from the module
-(`getCards()`, `getTiles()`, `getCharts()`, `getDashboards()`, `getReports()`, `getResources()`, …),
-and list the module class in `config/ui5.php` under `modules`. No route file, no service provider, no
+**4. Registration is two steps and there is no third.** Name the artifact in its module's `ARTIFACTS`
+by class name (the app or library is the module's `ARTIFACT_ROOT`), and list the module class in
+`config/ui5.php` under `modules`. No route file, no service provider, no
 frontend config. The address is derived from namespace and version.
 
 **5. `resources/` is build output.** Never hand-edit it; `ui5:app --refresh` overwrites

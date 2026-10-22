@@ -3,11 +3,11 @@ name: laravelui5-dialogs
 description: >-
   Author a LaravelUi5 global dialog (a `Dialog` artifact). Use this whenever adding a modal
   create/edit interaction to a LaravelUi5 app — a dialog is a first-class, shell-agitated
-  artifact (`ArtifactType::Dialog`): a `sap.m.Dialog`-rooted View/Controller pair, opened
+  artifact (`SdkArtifactType::Dialog`): a `sap.m.Dialog`-rooted View/Controller pair, opened
   **through the shell by intent** (`ui5-artifact.open`), authorized server-side against its own
   `#[Access]`, and hosted by the LeanShell. Covers the SDK-owned `AbstractUi5Dialog` base, the
-  view/controller shape (single `sap.m.Dialog` root + `initDialog` hook), registration in
-  `getDialogs()`, the `#[Access]` gate, and the `LaravelUi5.dispatchIntent` open path. The write
+  view/controller shape (single `sap.m.Dialog` root + `initDialog` hook), registration in the
+  module's `ARTIFACTS`, the `#[Access]` gate, and the `LaravelUi5.dispatchIntent` open path. The write
   behind Save is a Ui5Action — see the `laravelui5-actions` skill. Triggers: "add a dialog",
   "global dialog", "create/edit dialog", "modal", "ui5-artifact.open", "openGlobalDialog",
   "Dialog artifact", "how do I open a dialog in a UI5 app".
@@ -21,8 +21,9 @@ metadata:
 
 A LaravelUi5 dialog is a **shell-dispatched artifact**: opened by intent through LeanShell,
 authorized server-side against its own `#[Access]`, and hosted by the shell. All three of those —
-the shell, intents and the ability system — are `laravelui5/sdk`. Core's module interface reserves
-the seat (`getDialogs()`), but the base class `AbstractUi5Dialog` lives in the SDK.
+the shell, intents and the ability system — are `laravelui5/sdk`, and so are the dialog's type, its
+contract and its base class `AbstractUi5Dialog`. A module lists a dialog in `ARTIFACTS` like any other
+artifact.
 
 **In a Core-only host, use an ordinary `sap.m.Dialog` inside your own app**: instantiate it in the
 controller, open it yourself, and authorize the write behind it in the action's `FormRequest`
@@ -37,17 +38,17 @@ Global dialogs: **laravelui5.com/sdk/shell/global-dialogs**.
 ## The rule that frames everything
 
 **A dialog is a shell-agitated artifact, opened by intent — never a direct client call.** A
-`Dialog` (`ArtifactType::Dialog`) is a `sap.m.Dialog`-rooted View/Controller pair, owned by an
+`Dialog` (`SdkArtifactType::Dialog`) is a `sap.m.Dialog`-rooted View/Controller pair, owned by an
 app, opened through the shell: the app dispatches `ui5-artifact.open`, the server authorizes it
 against the dialog's own `#[Access]`, and the LeanShell's `DialogAdapter` opens it (in the
 owning app, or by booting a foreign Component if that app isn't on screen). Do **not** call
 `component.openGlobalDialog(...)` directly from an app — that bypasses the server gate and the
 shell's addressability. `openGlobalDialog` is the LeanShell's *internal* mechanism.
 
-**Where the pieces live (artifact-ownership rule).** The enum case and the `Ui5DialogInterface`
-live in **Core** (the contract is Core-expressible — `getViewName(): string`, pure primitives);
-the `AbstractUi5Dialog` base and the open runtime live in the **SDK**. You author against the
-SDK base. See `sdk-host/ui5/Sdk/doc/artifact-ownership.md`.
+**Where the pieces live.** Everything about a dialog is the **SDK's**: the type
+(`LaravelUi5\Sdk\Ui5\Enums\SdkArtifactType::Dialog`), the contract
+(`LaravelUi5\Sdk\Ui5\Contracts\Ui5DialogInterface`), the `AbstractUi5Dialog` base and the open
+runtime. Core knows none of them. You author against the SDK base.
 
 **Requires:** Core `≥ 1.2.0` and `@laravelui5/core ≥ 5.2.0` (the client `dispatchIntent` facade +
 the corrected `BaseComponent` type), and SDK `≥ 0.17.15` (the intent + the own-app model fix).
@@ -79,13 +80,14 @@ class CreateCompanyDialog extends AbstractUi5Dialog
 }
 ```
 
-Register it in the owning module's `getDialogs()`:
+List it in the owning module's `ARTIFACTS`:
 
 ```php
-public function getDialogs(): array
-{
-    return [ new Dialogs\CreateCompanyDialog($this), new Dialogs\CreatePersonDialog($this) ];
-}
+public const array ARTIFACTS = [
+    Dialogs\CreateCompanyDialog::class,
+    Dialogs\CreatePersonDialog::class,
+    // …
+];
 ```
 
 ## Part 2 — the view + controller (frontend)
@@ -165,10 +167,8 @@ signal the list to refresh (component event bus) and close the dialog.
 
 - `#[Access]` on the dialog is the **open gate** (checked before the dialog appears). `#[Act]` on
   the create Action is the **write gate**. Two layers.
-- Both need **`php artisan ui5:sync`** — the gate's id comes from the synced DB. Before sync the
-  dialog's gate is **closed**: it does not open, and since sdk 2.0 it does not show in the palette
-  either and the log names `ui5:sync`. Run `ui5:sync` after adding (on sdk 1.x also `ui5:cache` in
-  prod; since sdk 2.0 the sync ends with it).
+- Both are **inert until `php artisan ui5:sync`** — the resolver reads the synced DB, not live
+  attributes. Before sync, the gate is Open. Run `ui5:sync` (+ `ui5:cache` in prod) after adding.
 
 ## Gotchas (learned the hard way)
 
@@ -192,14 +192,14 @@ signal the list to refresh (component event bus) and close the dialog.
 ## Worked example
 
 `sdk-host/ui5/Partners/src/Dialogs/` — `CreateCompanyDialog` + `CreatePersonDialog` (`#[Access]`-gated),
-registered in `PartnersModule::getDialogs()`; the views/controllers in
+listed in `PartnersModule::ARTIFACTS`; the views/controllers in
 `ui5-partners/webapp/view/dialogs/` + `controller/dialogs/` (shared `BaseCreateDialog`); the Master's
 `Create ▾` menu dispatches `ui5-artifact.open`; Save fires `CreatePartnerAction`. Running notes:
 `sdk-host/ui5/Sdk/doc/dialogs.md`.
 
 ## Checklist
 
-- [ ] PHP artifact extends `AbstractUi5Dialog`; five typed consts (`public const string …`) incl. `VIEW`; registered in `getDialogs()`.
+- [ ] PHP artifact extends `AbstractUi5Dialog`; five typed consts incl. `VIEW`; listed in the module's `ARTIFACTS`.
 - [ ] `#[Access(ability, SdkRole::…, note)]` on the dialog; `ui5:sync` to activate.
 - [ ] View root is a single `sap.m.Dialog`; body is `Form` + `ColumnLayout` (not `SimpleForm`).
 - [ ] Controller has `initDialog(dialog)` + `onCancel`/`onSave`; app `Component` extends `BaseComponent`.

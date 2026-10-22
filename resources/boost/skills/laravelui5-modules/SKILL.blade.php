@@ -84,9 +84,26 @@ The namespace **is** the URL coordinate: dots become slashes, `com.acme.portal` 
 
 ## Registration is explicit, twice, and there is no scanning
 
-**1. Register each artifact inside its module** — in the matching `getCards()`, `getReports()`,
-`getActions()`, … method. Nothing is auto-registered; every `ui5:*` generator prints a reminder. An
-artifact exists only if it was intentionally exposed.
+**1. Name each artifact in its module** — the root (the app or library) in `ARTIFACT_ROOT`, every other
+artifact as a class name in `ARTIFACTS`. `ui5:app` and `ui5:lib` write the root; every other `ui5:*`
+generator prints the line to add and never edits the module. Nothing is auto-registered: an artifact
+exists only if it was intentionally exposed.
+
+```php
+class SalesModule extends AbstractUi5Module
+{
+    public const string ARTIFACT_ROOT = SalesApp::class;
+
+    public const array ARTIFACTS = [
+        Cards\PipelineCard::class,
+        Actions\ApproveAction::class,
+    ];
+}
+```
+
+An artifact's constructor takes the module and nothing else, and a module lists its artifacts
+unconditionally — what only some may see is `#[Access]`'s, not the module's. A module without its root
+fails at boot.
 
 **2. List the module class in `config/ui5.php`** — a flat list of class-strings:
 

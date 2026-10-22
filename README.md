@@ -104,19 +104,20 @@ To have it happen on every `composer update`, add it to your application's scrip
 
 Chiron is versioned **independently** of the packages it describes — that independence is why it
 exists. Each release states in its changelog which majors of `odata`, `core` and `sdk` it was written
-against, and its `composer.json` **enforces** that with a `conflict` on the next major of each:
+against, and its `composer.json` **enforces** that with a `conflict` on the majors it does not cover —
+the next one, and for a major whose forms it no longer teaches, the earlier ones too:
 
 ```json
 "conflict": {
     "laravelui5/odata": ">=4.0",
-    "laravelui5/core": ">=3.0",
+    "laravelui5/core": "<4.0 || >=5.0",
     "laravelui5/sdk": ">=2.0"
 }
 ```
 
-So guidance never outlives the major it was written for. Moving your app to the next major of any of
-the three needs a Chiron release that covers it, and Composer says so instead of handing your agent
-instructions for the version you just left. Requiring Chiron before you install the stack is
+So guidance never outlives the major it was written for, and never predates it. Moving your app to
+another major of any of the three needs a Chiron release that covers it, and Composer says so instead
+of handing your agent instructions for a version you are not on. Requiring Chiron before you install the stack is
 unaffected — a conflict only applies to what is installed. Guidance that depends on a particular
 version within the range — a major, or a minor such as *since odata 3.1* — says so inline.
 

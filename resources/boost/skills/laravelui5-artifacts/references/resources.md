@@ -18,7 +18,7 @@ then rebuild by hand, per resource.
 ## The honest state of this artifact
 
 `Ui5Resource` ships and is covered by tests, but it is **the one Core surface that never found a
-second consumer**: every `getResources()` in the vendor's own applications returns `[]`, and the only
+second consumer**: no module of the vendor's own applications lists a Resource, and the only
 implementations are test fixtures. That is a statement about fit, not a defect — each time they
 reached for it, the OData path turned out to be the better answer.
 

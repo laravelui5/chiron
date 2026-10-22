@@ -21,7 +21,7 @@ metadata:
 
 **OData is read-only in LaravelUi5. Every mutation is a Ui5Action.** Reads go through OData
 entity sets; creates/updates/deletes go through a named, versioned, authz-gated Ui5Action
-(`ArtifactType::Action`, `api/` route prefix, `POST`/`PATCH`/`DELETE` only — never `GET`/`PUT`).
+(`CoreArtifactType::Action`, `api/` route prefix, `POST`/`PATCH`/`DELETE` only — never `GET`/`PUT`).
 Do not reach for OData entity-set writes; they are not part of the framework.
 
 ## Always scaffold — never hand-create
@@ -152,14 +152,11 @@ Eloquent model, route-model-bound). Everything scalar (ids, flags, values) goes 
 ## Register the action
 
 ```php
-public function getActions(): array
-{
-    return [
-        new Actions\CreateGroupAction($this),
-        new Actions\UpdateGroupAction($this),
-        // …
-    ];
-}
+public const array ARTIFACTS = [
+    Actions\CreateGroupAction::class,
+    Actions\UpdateGroupAction::class,
+    // …
+];
 ```
 
 ## Secure the action with `#[Act]`
@@ -235,7 +232,7 @@ shape (e.g. `CreateDepartmentHandler`, `DeleteProfileHandler`) when editing exis
 - [ ] Inputs read off `$context->validated()` / `$context->parameter('…')`; actor off `$sdk`.
 - [ ] Action declares `getRequest()` (required for the `#[Act]` gate to fire — even bodyless DELETEs).
 - [ ] Route identifiers are `#[Parameter]` **Model** params; scalars are in the body.
-- [ ] Registered in the module's `getActions()`.
+- [ ] Listed in the module's `ARTIFACTS`.
 - [ ] Secured with `#[Act(ability, SdkRole::…, note)]`; ability i18n keys provided; run `ui5:sync` to activate.
 - [ ] Frontend uses `LaravelUi5.call(namespace, params, body)`.
 @else
@@ -330,7 +327,7 @@ arguments through the invoker.
 
 Two steps, and there is no third:
 
-1. Return it from the module's `getActions()`.
+1. List it in the module's `ARTIFACTS`, by class name.
 2. Make sure the module class is listed in `config/ui5.php` under `modules`.
 
 No route file, no service provider, no frontend config. The address is derived:
@@ -368,5 +365,5 @@ The action is invoked **by namespace, not by URL** — the frontend never builds
 - [ ] Returns a JSON-serializable array, always — including on the no-payload path.
 - [ ] Wrapped in `DB::transaction()` if more than one row changes.
 - [ ] Authorized — in the FormRequest's `authorize()` or explicitly in the handler.
-- [ ] Returned from the module's `getActions()`, and the module is in `config/ui5.php`.
+- [ ] Listed in the module's `ARTIFACTS`, and the module is in `config/ui5.php`.
 @endif
