@@ -8,7 +8,7 @@ packages it describes.
 Each release names the majors it was written against. A guideline that only holds for one major says
 so inline rather than forking the file.
 
-## [1.4.0] - unreleased – Core 4.0.0
+## [1.4.0] - 2026-10-22 – Core 4.0.0
 
 Written against **odata 3.x · core 4.x · sdk 1.x**, and Composer holds it to that: `conflict` names
 `laravelui5/core <4.0 || >=5.0`. The guidance describes Core 4 as it is; it no longer carries the forms
