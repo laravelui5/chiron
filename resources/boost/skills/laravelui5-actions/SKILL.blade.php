@@ -100,7 +100,7 @@ class UpdateGroupHandler implements SdkActionHandlerInterface
         $group->update(['description' => $data['description']]);
 
         $transaction->touched('/Groups');            // client refreshes this OData path after commit
-        return $transaction->commit('Group updated.');
+        return $transaction->commit(MessageText::of('messages.group.updated'));
     }
 }
 ```
@@ -113,11 +113,14 @@ class UpdateGroupHandler implements SdkActionHandlerInterface
 **Sealing the outcome (do exactly one):**
 - `$transaction->commit($primaryMessage, $data = [])` — success. `$primaryMessage` lands in the
   response `message` slot (a success toast on the client); `$data` is the payload (e.g. a new key).
+  Pass a **`MessageText`** — a key in the app's bundle, resolved on the server in the user's language;
+  a plain string is shown as written (use that only for an exception's message).
 - `$transaction->rollback(...)` — a **business** failure: undoes the transaction and returns the
   typed error envelope.
 - `$transaction->touched('/EntitySet')` — mark OData paths the client should refresh post-commit.
-- `$transaction->info(new MessageText('messages.<...>'))` — attach a business message (its text is
-  an **i18n key**, resolved client-side under the `messages.*` convention).
+- `$transaction->info(MessageText::of('messages.<...>', [$param]))` — attach a business message. Its
+  key lives in the app's bundle; the server resolves it and the response carries `text` beside `key`
+  and `params`, which the client shows. Put the key in `i18n.properties` **and** every locale file.
 
 Returning without sealing — or returning a different response — is a `SealViolationException`.
 A thrown exception rolls the transaction back and serializes a technical failure.
@@ -175,8 +178,11 @@ class CreateGroupAction extends AbstractUi5Action { /* … */ }
 - **Activation is via sync.** The gate is **inert until `php artisan ui5:sync`** — the resolver
   reads the *synced DB*, not live attributes. Before sync → Open-Gate (open to everyone). After
   sync, the acting partner must hold the ability (via its role) or 403s.
-- **i18n labels (required):** `abilities.act.<ability>.title` / `.description` in the app bundle.
-  Renaming an ability is a **breaking security change**.
+- **Title and description (required):** `abilities.act.<ability>.title` / `.description` in the app
+  bundle, base file and every locale. **`ui5:sync` stops on a missing key**; run `php artisan ui5:i18n`
+  to list every missing one. Renaming an ability is a **breaking security change**.
+- **Field names in a 422** come from the app bundle when you give them: `fields.<field>` for the name,
+  `validation.<field>.<rule>` for a sentence of your own. Optional — without them Laravel's apply.
 
 ## Runtime + frontend wiring
 

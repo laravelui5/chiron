@@ -98,6 +98,28 @@ discovered `Orders` *collection* on a large table — that is what `OrderList` i
   paging, `IEEE754Compatible`), `$batch`, read authorization behaviour, caching, and what the
   common clients expect.
 
+## Translated texts arrive translated
+
+A localized vocabulary — a Customizing catalog, an ability's or a setting's title — reads in the
+user's language by itself; so does master data. On a model, declare the translatable fields and use
+the trait:
+
+```php
+#[Translatable(['title', 'description'])]
+final class Item extends Model
+{
+    use HasTranslations;
+}
+```
+
+Every query of the model — `discoverModel()` included — then delivers those columns in the request's
+language: the further-language text from `sdk_translations`, else the column's base value, never
+English. `$filter`, `$orderby` and `$search` run on that text. **Do not add a `title_text` column** or
+resolve texts in a custom set. An editor binds the `translations` navigation (`AbstractTranslationsExpand`,
+every language including the base), not the field; the owning action writes with
+`$item->setTranslations(['fr' => ['title' => 'Vis']])` in its own transaction — it refuses the base
+language and any language that is not one of the tenant's further ones (`LaravelUi5.getLanguages()`).
+
 ## Four things not to do
 
 - **Do not write a controller, API resource or `?include=` convention** for data an OData service

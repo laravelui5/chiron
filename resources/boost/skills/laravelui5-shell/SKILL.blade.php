@@ -82,6 +82,11 @@ LaravelUi5.dispatchIntent({
 the intent does.** One route answers them all — `POST /ui5/shell/{slug}/intend.json`. So never build
 a navigation URL in the frontend; dispatch an intent.
 
+A handler's refusal or message is a **key**, not prose:
+`IntentResult::deny(MessageText::of('messages.period.closed', [$name])->from(PeriodsApp::NAMESPACE))`.
+`from()` names the app whose bundle holds the key; without it the key is read from Core's bundle,
+where the SDK keeps its own (`sdk.intent.deny.*`). The dispatcher resolves it in the user's language.
+
 ## Value helps — one picker, many scopes
 
 A value help is a picker that answers a question. The caller awaits a promise, the user picks, the
@@ -123,6 +128,13 @@ The rail is assembled from **contributors**, each filling one slot of a fixed sh
 navigation yourself; declare the entry and let the projection remove it.
 
 The drawer carries the **host's** branding, not the vendor's.
+
+Every rail entry needs `route.<key>.label` in its app's base bundle — `app` for the app itself, the
+route name for a parameterless route, the full namespace for a dashboard or report. **`ui5:nav` stops
+on a missing label**, and builds one navigation per language. A Weave doorway needs
+`weave.<concept>.label` in the bundle of the app that declares the `#[Weave]` — the attribute has no
+`label`; a missing key stops the registry build. `#[Concept]`'s `marketplaceName` is literal English
+for publishers and never shown to a user.
 
 ## The Launchpad is never gated — and that is an invariant
 

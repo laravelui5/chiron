@@ -83,8 +83,11 @@ $note)` — and three rules hold:
 3. **Changing an ability name is a breaking security change.** Existing grants reference the name;
    renaming silently revokes them.
 
-Every ability needs i18n keys for its UI labels:
-`abilities.access.<ability>.title` / `.description`, and the same under `act` and `read`.
+Every ability needs a title and a description in its app's bundle — base file and every locale:
+`abilities.access.<ability>.title` / `.description`, and the same under `act` and `read`. The type is
+part of the key, as it is part of the ability. **`ui5:sync` stops on a missing key** and names it with
+its file; `php artisan ui5:i18n` lists every missing one. The rights UI shows these texts in the
+user's language, the token below them. A `see` ability takes its texts from the view's keys instead.
 
 ## How big is an app? The capability cut
 

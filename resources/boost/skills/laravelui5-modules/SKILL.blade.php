@@ -179,7 +179,8 @@ degrades predictably:
 | `dispatchIntent(intent)` | resolves, does nothing | routed by the shell |
 | `openValueHelp(options)` | **rejects** — there is no return channel | opens it and resolves with the pick |
 | `showHelp(uuid)` | no-op | opens the help viewer |
-| `getWeave()` | `[]` | the app's outbound doorways |
+| `getWeave()` | `[]` | the app's outbound doorways, each `label` already in the user's language |
+| `getLanguages()` | the UI5 language, no further one | the tenant's base and further languages for master data |
 | `attach` / `detach` | no-op | shell events, e.g. `context:changed` |
 | `log(event, payload, level)` | `console.log` | the shell's log channel |
 

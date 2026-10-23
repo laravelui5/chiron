@@ -73,6 +73,10 @@ class InvoicingApp extends AbstractUi5App { /* … */ }
 `ui5:sync` writes each declared setting as the `Platform` row of that artifact, after which it
 appears in the Settings app under the artifact's title.
 
+Give it a title and a description in the bundle of the module that declares it — base file and
+every locale: `settings.<key>.title` / `.description`. **`ui5:sync` stops on a missing key**; `note`
+stays your text for developers. `slot.*` settings need none.
+
 Since core 3.0 the artifact's settings are injected into every handler and provider that extends
 `AbstractConfigurable` — Action, Resource, Card, Tile, Chart and Report alike (on core 2.x, Tile,
 Chart and Report providers got none). Settings are read-only: writing `$this->pageSize = 5` throws.
@@ -140,6 +144,11 @@ Controlled vocabularies — partner roles, relationship types, document types �
 reconciled into tables by `ui5:sync`. See `references/customizing.md`; the distinction that matters
 is **Customizing (the vocabulary, owned by your code) vs Tailoring (the assignments, owned by the
 running system)**. They never share a table.
+
+A row's translatable fields take their texts from the bundle of the module that declares the row:
+`customizing.<catalog>.<code>.<column>`. `ui5:sync` stops on a missing key and writes every language
+to `sdk_texts`. Name the catalog's Eloquent model under `ui5.i18n.customizing` (model → entry class)
+and every query of it reads those columns in the user's language — `$filter` and `$orderby` too.
 
 ## Do not
 

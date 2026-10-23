@@ -42,6 +42,11 @@ final class DocumentType implements CustomizingEntry
 }
 ```
 
+Each field `translatable()` names takes its text from the bundle of the module that declares the row,
+base file and every locale — `customizing.document_types.invoice.name=Invoice`. `ui5:sync` stops on a
+missing key (a field whose literal is `null` needs none) and writes every language to `sdk_texts`;
+`php artisan ui5:i18n` lists every missing key at once.
+
 Then stack the attribute on the class that owns the vocabulary — it is repeatable, one instance per
 row.
 

@@ -8,6 +8,31 @@ packages it describes.
 Each release names the majors it was written against. A guideline that only holds for one major says
 so inline rather than forking the file.
 
+## [Unreleased] – SDK 2.0: what the stack says, in the user's language
+
+Written against **odata 3.2 · core 4.4 · sdk 2.0** (`meta/specs/sdk/i18n-v1.0.md`). Ships with the SDK 2.0 tag;
+the version is named then. Audit, the Commands/Jobs envelopes and the rest of the 2.0 cut join this section.
+
+### Changed
+
+- **Texts are keys in the bundle of the module that declares them, and missing ones stop the build**
+  (`laravelui5-security`, `laravelui5-actions`, `laravelui5-settings`, `laravelui5-shell`): ability titles
+  (`abilities.<type>.<ability>.*`), setting titles (`settings.<key>.*`), Customizing fields
+  (`customizing.<catalog>.<code>.<column>`) stop `ui5:sync`; rail labels (`route.<key>.label`) stop `ui5:nav`;
+  `ui5:i18n` lists every missing one.
+- **`#[Weave]` has no `label`** — `weave.<concept>.label` in the declaring app's bundle; **`#[Concept]`'s `label`
+  is `marketplaceName`**, literal English for publishers (`laravelui5-shell`).
+- **What the server says is a `MessageText`** — an intent's `deny()`/`message()` (with `from(App::NAMESPACE)`),
+  an action's headline and messages, resolved on the server in the user's language (`laravelui5-shell`,
+  `laravelui5-actions`); a 422's field names from `fields.<field>`.
+
+### Added
+
+- **Translated texts arrive translated** (`laravelui5-odata-modeling`): localized vocabularies and master data
+  (`#[Translatable]` + `HasTranslations`) read in the user's language, filter and sort included; editors bind the
+  `translations` navigation; `setTranslations()` writes. `LaravelUi5.getLanguages()` in the facade table
+  (`laravelui5-modules`).
+
 ## [1.4.0] - 2026-10-22 – Core 4.0.0
 
 Written against **odata 3.x · core 4.x · sdk 1.x**, and Composer holds it to that: `conflict` names
