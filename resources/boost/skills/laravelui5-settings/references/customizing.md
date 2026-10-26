@@ -59,8 +59,8 @@ row.
 - **deletes** rows that are no longer declared.
 
 It is **idempotent** — run it as often as you like; it converges and never duplicates.
-`ui5:sync --dry` previews the plan and changes nothing, which is a cross-environment drift diff no
-seeder could give you.
+A code that is no longer declared but a Configuration still uses is kept and reported as a blocker:
+`ui5:ready` lists it, and `ui5:sync` does not start until the Configuration no longer needs it.
 
 ```bash
 php artisan migrate     # the table

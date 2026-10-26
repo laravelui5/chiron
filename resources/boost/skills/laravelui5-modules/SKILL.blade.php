@@ -8,10 +8,12 @@ description: >-
   single-source rule, explicit registration in config/ui5.php, the path-repository wiring, the
   LaravelUi5.init arm-then-route contract, the two places a UI5 library must be declared, the
   workspace vs package source strategies and .ui5-sources.php, and what ui5:assemble is (and is
-  not). Adding an artifact to an existing module is a different task — see laravelui5-artifacts.
+  not), and — with the SDK — how a module contributes a worker to ui5:sync. Adding an artifact to an
+  existing module is a different task — see laravelui5-artifacts.
   Triggers: "new module", "new app", "ui5:app", "ui5:lib", "ui5:assemble", "config/ui5.php",
   "module not found", "app does not resolve", "failed to load library.js", "how do I serve my UI5
-  sources", "path repository", "LaravelUi5.init", "Component-preload", "yo easy-ui5".
+  sources", "path repository", "LaravelUi5.init", "Component-preload", "yo easy-ui5", "sync worker",
+  "SyncWorkerInterface", "blocker", "ui5:ready".
 license: MIT
 metadata:
   author: laravelui5
@@ -252,6 +254,39 @@ named **`Showcase`**; there is no name argument and no prefix/vendor options.
 Use it to see the whole stack working end to end. **For a real, many-app project use `ui5:app` with a
 workspace UI5 CLI build.**
 
+@if (class_exists(\LaravelUi5\Sdk\SdkServiceProvider::class))
+## Contributing a sync worker
+
+A module whose code declares a catalogue the database must mirror adds a worker to `ui5:sync`:
+
+```php
+final class DunningLevelsWorker implements SyncWorkerInterface, CatalogWorkUnitInterface
+{
+    public function __construct(private readonly SdkRegistry $registry) {}   // named $registry: the sync passes the live one
+
+    public function tables(): array { return ['dun_levels', 'sdk_texts']; } // every table it writes
+
+    public function handle(BusinessTransaction $transaction, BusinessContextInterface $context, SdkContext $sdk): Outcome
+    {
+        // insert / update / delete-absent; a delete a foreign key may refuse:
+        if (!RestrictedDelete::attempt(fn () => $level->delete())) {
+            $transaction->error(MessageText::of('messages.dunning.levelInUse', [$level->code]), "dun_levels:{$level->code}");
+        }
+        return $transaction->summary([...])->info(MessageText::of('messages.dunning.synced', [...]))->commit();
+    }
+}
+```
+
+- **Declare it** (`AbstractWorkUnit`, `UNIT = DunningLevelsWorker::class`, a `units` segment) in the
+  module's `ARTIFACTS`, and **place it** in the provider:
+  `$this->app->afterResolving(SyncWorkerCollectorInterface::class, fn ($w) => $w->after(RolesWorker::class, DunningLevelsWorker::class));`
+- **A blocker, not an exception:** a row people's data still uses stays — keep its texts too — and is
+  reported as an error with the object as target. `ui5:ready` lists it; `ui5:sync` waits.
+- **`CatalogWorkUnitInterface` only for code-owned tables** — never for a table with `#[Audited]`. A
+  worker that would touch people's values is a design error: split the table (declaration vs values).
+- **Never** handle a dry run, open a transaction, or call another worker. The command does all three.
+
+@endif
 ## Do not
 
 - **Do not create a module class by hand.** Scaffold the root artifact and the module comes with it.

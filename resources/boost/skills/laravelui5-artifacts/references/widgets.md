@@ -37,7 +37,8 @@ class RevenueProvider extends AbstractConfigurable implements DataProviderInterf
 
 `DataProviderInterface` is an **empty marker**; `provide(): array` is documented and enforced at
 runtime, and its arguments are method-injected — the `Ui5ContextInterface` arrives that way if you
-declare it. **Slot values do not**: the card path runs no slot pipeline.
+declare it. **Slot values:** from Core 5.0 the card's `getRequiredSlots()` arrive as `array $slots`, as for a
+report; on Core 4.x read each one with `$context->slot(...)` instead — `array $slots` does not resolve there.
 
 ### The manifest template
 

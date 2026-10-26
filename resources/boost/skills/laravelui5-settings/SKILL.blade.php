@@ -124,8 +124,9 @@ Core's `Scope` enum, least to most specific. **The highest scope present wins.**
 Opening the Settings app needs the `settings-admin` ability; saving and resetting need `setSetting`
 and `resetSetting`. Beyond that every change passes:
 
-1. **Not the default.** The `Platform` row is never written by hand — only `ui5:sync` writes it.
-2. **Declared.** A key with no `Platform` row cannot be overridden.
+1. **Not the default.** No value is stored at `Platform` — that level is the declaration, written only by
+   `ui5:sync`.
+2. **Declared.** A key with no declaration cannot be overridden.
 3. **Edit level.** The partner's edit level must reach the setting's `level`.
 4. **Scope.** A partner writes at their own scope and at more specific ones.
 5. **On behalf.** Setting another partner's `User` value needs `LocalAdmin` or higher.
@@ -137,6 +138,11 @@ role a partner cannot open the Settings app at any level.
 
 A change that fails a check, or a value that does not fit the declared type, is refused with its
 reason and nothing is stored.
+
+**Changing a declaration in code never rewrites people's values.** A removed or renamed `#[Setting]` that still
+has values, or a changed type that does not fit a value already set (`"5"` does not fit an integer), is a
+**blocker**: the declaration stays as it was, `ui5:ready` names it, and `ui5:sync` does not start. Ship the upgrade
+path with the change: the values are reset or carried in the Settings app before the sync runs again.
 
 ## Customizing is the third thing
 

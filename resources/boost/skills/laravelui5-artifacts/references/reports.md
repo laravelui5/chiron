@@ -63,8 +63,8 @@ explicitly as `$slots`. **Service dependencies go in the constructor; per-reques
 method signature.** Core's `Ui5ContextInterface` carries the resolved `artifact()` and the request
 `locale()` and nothing more — Core is auth-blind.
 
-Note the shape differs from a card's provider: a report's `provide()` takes `$slots`, a card's takes
-none (the card path runs no slot pipeline).
+From Core 5.0 a card's provider takes `$slots` the same way; on Core 4.x it takes none and reads a slot with
+`$context->slot(...)`.
 
 ### 3. The view — a complete HTML page
 

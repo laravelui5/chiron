@@ -84,8 +84,8 @@ a navigation URL in the frontend; dispatch an intent.
 
 A handler's refusal or message is a **key**, not prose:
 `IntentResult::deny(MessageText::of('messages.period.closed', [$name])->from(PeriodsApp::NAMESPACE))`.
-`from()` names the app whose bundle holds the key; without it the key is read from Core's bundle,
-where the SDK keeps its own (`sdk.intent.deny.*`). The dispatcher resolves it in the user's language.
+`from()` names the app whose bundle holds the key; without it the key is read from the SDK's library
+(`com.laravelui5.sdk`), where the SDK keeps its own (`sdk.intent.deny.*`). The dispatcher resolves it in the user's language.
 
 ## Value helps — one picker, many scopes
 

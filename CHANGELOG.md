@@ -10,11 +10,27 @@ so inline rather than forking the file.
 
 ## [Unreleased] – SDK 2.0: what the stack says, in the user's language
 
-Written against **odata 3.2 · core 4.4 · sdk 2.0** (`meta/specs/sdk/i18n-v1.0.md`). Ships with the SDK 2.0 tag;
+Written against **odata 3.2 · core 4.4 and 5.0 · sdk 2.0** (`meta/specs/sdk/i18n-v1.0.md`, `meta/specs/core/doctor-v1.0.md`). Ships with the SDK 2.0 tag;
 the version is named then. Audit, the Commands/Jobs envelopes and the rest of the 2.0 cut join this section.
+
+### Added
+
+- **`ui5:doctor`** (core guideline, Core 5.0 only): run it after scaffolding and before debugging a UI5 app;
+  apply the fix each finding names; a host's own check is a `host.W<n>` rule tagged `DoctorRuleInterface`.
+  Guarded by `version_compare(CoreLibrary::VERSION, '5.0')`, so the line still serves Core 4.4. The `conflict`
+  bound on `laravelui5/core` moves from `>=5.0` to `>=6.0`.
+- **An action declares `METHOD`, `HANDLER`, `REQUEST` as constants** (`laravelui5-actions`, Core 5.0 only; Core
+  ROADMAP `OP35`): both examples show the constants under Core 5.0 and the getters under 4.4.
+- **A card's provider takes `array $slots` from Core 5.0** (`laravelui5-artifacts`, references `widgets` and
+  `reports`; Core ROADMAP `OP06`); on 4.x it reads a slot with `$context->slot()`.
 
 ### Changed
 
+- **The installation, not a system actor** (`laravelui5-partners`, the SDK guideline; `meta/specs/sdk/installation-v1.0.md`
+  D6, D15–D21): the platform owner, the operator and the tenant are rows found by key and `operator_for`; a new
+  database is `ui5:intake` → `ui5:sync` → `ui5:tenant`; the automation actor is the SDK setting `automation_actor`
+  (an e-mail, by default the support department); `acts_for` beside `employed_by`; the ladder's rungs. The system
+  actor, `ui5.system_actor_id` and `UI5_AUTOMATION_ACTOR_ID` are gone.
 - **Texts are keys in the bundle of the module that declares them, and missing ones stop the build**
   (`laravelui5-security`, `laravelui5-actions`, `laravelui5-settings`, `laravelui5-shell`): ability titles
   (`abilities.<type>.<ability>.*`), setting titles (`settings.<key>.*`), Customizing fields
@@ -25,9 +41,47 @@ the version is named then. Audit, the Commands/Jobs envelopes and the rest of th
 - **What the server says is a `MessageText`** — an intent's `deny()`/`message()` (with `from(App::NAMESPACE)`),
   an action's headline and messages, resolved on the server in the user's language (`laravelui5-shell`,
   `laravelui5-actions`); a 422's field names from `fields.<field>`.
+- **The SDK's texts and the help `Context` live in the SDK's library `com.laravelui5.sdk`** (`laravelui5-shell`):
+  a key without `from()` is read there; an app lists `com.laravelui5.sdk` in `getResourceNamespaces()`
+  (`meta/specs/sdk/i18n-v1.0.md` D33).
+- **A headline is a `MessageText`, never a string; a refusal must have one** (`laravelui5-actions`):
+  `commit(?MessageText)`, `rollback(MessageText)` (`meta/specs/sdk/audit-v1.0.md` D41).
+- **A setting's declaration and its values are apart; the sync never rewrites a value** (`laravelui5-settings`):
+  a removed, renamed or retyped `#[Setting]` whose values no longer fit stops `ui5:sync` instead of deleting or
+  converting them (`meta/specs/sdk/audit-v1.0.md` D38).
 
 ### Added
 
+- **Two skills for the audited triggers** (SDK): `laravelui5-commands` — the person and automation bases, the
+  declaration, `#[Act]` only on person commands, `handleCommand()` and the runner; `laravelui5-jobs-and-units` — the
+  unit of work and its seal, the audited job, `afterCommit()`, A1–A3 and K1, the catalogue opt-out. Both start from the
+  new generators `ui5:command`, `ui5:unit`, `ui5:job` (`meta/specs/sdk/audited-execution-v1.0.md` D38).
+
+- **The security log** (the SDK guideline): a host's own sign-in path dispatches `SecurityEvent`
+  (`meta/specs/sdk/audit-v1.0.md` D43).
+- **Audited commands** (the SDK guideline): the two bases, the console sign-in, `#[Act]` only on person commands,
+  `--language` (`meta/specs/sdk/audited-execution-v1.0.md` D37).
+- **Audited jobs** (the SDK guideline): `AbstractJob` declares, `AbstractAuditedJob` runs units of work through the
+  runner with the initiator kept (`meta/specs/sdk/audited-execution-v1.0.md` D36).
+- **No audited write outside a unit of work** (the SDK guideline): a plain controller, command or job that writes an
+  audited model fails a test (`meta/specs/sdk/audited-execution-v1.0.md` D35).
+- **Audited models are listed in `ui5.audit.models`** (the SDK guideline): the write rule checks every write on their
+  tables (`meta/specs/sdk/audited-execution-v1.0.md` D34).
+- **The `#[Act]` gate is the dispatcher's** (`laravelui5-actions`): a gated action no longer needs a FormRequest, and
+  `authorize()` defaults to `true` (`meta/specs/sdk/audited-execution-v1.0.md` D33).
+- **A role needs a title and a description** (`laravelui5-security`): `roles.<role>.title` / `.description` in the
+  bundle of the module that carries the `#[Role]`; a missing key stops `ui5:sync` (`meta/specs/sdk/i18n-v1.0.md` D34).
+- **Units of work and the audit's rules** (`laravelui5-actions`, the SDK guideline): a handler writes only through
+  models — no `DB::table` writes, no quiet saves — dispatches with `afterCommit()`, has no outside effects inside the
+  transaction and never starts another unit of work; units of work and audited commands are declared
+  (`AbstractWorkUnit`, `AbstractCommand`); what runs without a person runs as the automation actor. **Configuration
+  tables carry `#[Audited]`, a Customizing catalog never does**; migrations on audited tables use `restrict` only and
+  reshape but never correct (`meta/specs/sdk/audit-v1.0.md` D5, D19, D26–D28; `meta/specs/sdk/audited-execution-v1.0.md`
+  D8, D10, D29).
+- **Contributing a sync worker** (`laravelui5-modules`): `SyncWorkerInterface`, the registry as `$registry`, the
+  declaration and the collector, blockers instead of exceptions, the catalogue opt-out only for code-owned tables;
+  `ui5:ready` before `ui5:sync`, which has no `--dry` any more (`laravelui5-settings`, `laravelui5-dialogs`,
+  `laravelui5-actions`).
 - **Translated texts arrive translated** (`laravelui5-odata-modeling`): localized vocabularies and master data
   (`#[Translatable]` + `HasTranslations`) read in the user's language, filter and sort included; editors bind the
   `translations` navigation; `setTranslations()` writes. `LaravelUi5.getLanguages()` in the facade table

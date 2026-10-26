@@ -89,6 +89,10 @@ part of the key, as it is part of the ability. **`ui5:sync` stops on a missing k
 its file; `php artisan ui5:i18n` lists every missing one. The rights UI shows these texts in the
 user's language, the token below them. A `see` ability takes its texts from the view's keys instead.
 
+**A role needs the same:** `roles.<role>.title` / `.description` in the bundle of the module that carries the
+`#[Role]` — base file and every locale (`roles.accounting.title=Accounting`). The `note` stays the developer's; the
+person assigning roles reads the title. A missing key stops `ui5:sync` like an ability's.
+
 ## How big is an app? The capability cut
 
 Coming from Laravel the instinct is one app with a router and a guard per route. **That is the wrong

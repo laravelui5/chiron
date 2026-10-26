@@ -48,6 +48,8 @@ resources/boost/
     │                                  Core-only or SDK installations
     │                                  — laravelui5/sdk —
     ├── laravelui5-dialogs/            global dialogs as shell-dispatched artifacts
+    ├── laravelui5-commands/           audited artisan commands: person or automation, #[Act], the runner
+    ├── laravelui5-jobs-and-units/     units of work and audited jobs: the seal, afterCommit, A1–A3, K1
     ├── laravelui5-security/           time-aware RBAC: #[Access], #[Act], See, #[Read], scoped roles
     ├── laravelui5-partners/           the partner model: the actor, org partners, the four "roles"
     ├── laravelui5-settings/           Setting vs Slot vs Customizing, and how each is declared

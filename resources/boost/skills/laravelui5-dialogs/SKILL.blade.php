@@ -184,8 +184,8 @@ signal the list to refresh (component event bus) and close the dialog.
 
 ## Verify
 
-- `php artisan ui5:sync --dry` → the dialog artifact **and** its `#[Access]` ability appear
-  (`+ artifact […dialogs.create_company]`, `+ ability […|createCompanyDialog]`).
+- `php artisan ui5:sync` → the artifacts and abilities counts grow by the dialog and its `#[Access]` ability;
+  `ui5:ready` first, if the release removes anything.
 - Browser: `dispatchIntent` opens the dialog with its labels; a user lacking the ability is denied
   (the dialog never appears).
 

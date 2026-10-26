@@ -147,6 +147,16 @@ listed in `config/ui5.php` under `modules`. Nothing is wired in a route file, a 
 `ui5:app` · `ui5:action` · `ui5:card` · `ui5:tile` · `ui5:chart` · `ui5:dashboard` · `ui5:group` ·
 `ui5:report` · `ui5:resource` · `ui5:slot` · `ui5:wire` · `ui5:lib` · `ui5:assemble`
 
+@if (version_compare(\LaravelUi5\Core\CoreLibrary::VERSION, '5.0', '>='))
+### Diagnose before you debug
+
+**Run `php artisan ui5:doctor` after scaffolding, and first when a UI5 app misbehaves** — `failed to load
+'library.js'`, no shell chrome, a text in the wrong language. It reads the checkout and reports errors (exit
+`1`), warnings, notices and skipped rules, each line ending in its fix. Apply the fix it names; do not
+work around a finding. `.ui5-sources.php` is local state and never goes into git. A check only this
+application can make is a rule tagged `DoctorRuleInterface` with an id `host.W<n>`; never edit Core's rules.
+@endif
+
 ### The hierarchy
 
 A **Module** groups artifacts under one namespace root; it is not addressable and it is where
@@ -234,6 +244,50 @@ boundary, one config root.
 The SDK rebinds the action dispatcher, so an action's handler contract here is the **typed** one and
 the dispatcher wraps every call in a transaction. Use the **`laravelui5-actions`** skill; it renders
 the contract that applies to this installation.
+
+Every write runs in a **unit of work**: one transaction, one seal, one actor. A trigger (action,
+audited command, audited job) composes units of work; a unit of work composes plain operations.
+
+- **No unit of work inside another** — the runner refuses (`NestedWorkUnitException`).
+- **Write through models only** — no `DB::table` writes, no quiet saves; the audit sees only model
+  events.
+- **Dispatch and outside effects after the commit** — `afterCommit()`, and no HTTP or mail inside.
+- A unit of work that is no action's handler is **declared** (`AbstractWorkUnit`, a `units` segment in
+  its namespace); an audited command with `AbstractCommand` (a `commands` segment); an audited job with `AbstractJob`
+  (a `jobs` segment) and the class extends `AbstractAuditedJob` — its `handle(WorkUnitRunnerInterface $runner,
+  SdkContext $sdk)` runs units of work through the runner; the hull keeps the initiator and the correlation key.
+- Scaffold the audited triggers, never hand-create them: `php artisan ui5:command`, `ui5:job`, `ui5:unit` (skills
+  `laravelui5-commands`, `laravelui5-jobs-and-units`).
+- An **audited command** extends `AbstractAutomationCommand` (runs as the automation actor, never asks, no `#[Act]`)
+  or `AbstractPersonCommand` (signs its person in, checks the declaration's `#[Act]` against them); implement
+  `handleCommand(WorkUnitRunnerInterface $runner, SdkContext $sdk, …)` and run units of work through the runner.
+  Every audited command takes `--language`.
+- A sign-in path of the host's own (a magic link) dispatches `LaravelUi5\Sdk\Security\Events\SecurityEvent` with
+  `SecurityEventType::MagicLinkRedeemed` after `Auth::login()` — the security log sees Laravel's auth events, not how the
+  user got in. Never a token or password in an event.
+- What runs without a person runs as the **automation actor** — the partner whose e-mail the SDK setting
+  `automation_actor` names, any type, set by the operator; by default Pragmatiqu IT's support department, which
+  `ui5:intake` writes. A new database: `ui5:intake` → `ui5:sync` → `ui5:tenant`.
+
+### Audited tables
+
+- **`#[Audited(fields: [...], key: ...)]`** on every table people decide on — every **Configuration**
+  table the implementation consultant maintains, the assignments, the setting values. List the fields
+  the business must prove; key by the stable code where the row travels.
+- **Never write an audited model from a plain controller, command or job** — run it as a unit of work through the
+  runner. A write outside every unit of work inside a request, command or job fails a test (`source` Unmanaged in
+  production). Seeders and migrations are exempt.
+- **List every `#[Audited]` model in `ui5.audit.models`** (the SDK's own are built in); a package appends its own in
+  its service provider. The write rule needs the list: a query-builder write on a listed table fails a test.
+- **A Customizing catalog never carries `#[Audited]`.** It is vocabulary the code declares and
+  `ui5:sync` mirrors. Configuration is audited; Customizing is not. Do not mix the two words.
+- **One table, one owner:** it mirrors code or holds people's decisions, never both.
+- **Migrations on an audited table:** foreign keys are `restrict` only — no `cascade`, no `SET NULL`,
+  no `ON UPDATE CASCADE`. A migration may reshape a value (same meaning, other form) but never correct
+  one; a correction is a decision, run as an audited person command.
+- **`ui5:ready` before `ui5:sync`.** When a release no longer declares a row that people's data still
+  uses, the sync keeps it and reports a blocker; `ui5:sync` does not start until the data is cleared in
+  the apps. Never "fix" a blocker by deleting the people's data in a migration.
 
 Full SDK documentation: **laravelui5.com/sdk/**.
 @endif

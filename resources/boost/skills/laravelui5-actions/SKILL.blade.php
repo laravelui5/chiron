@@ -54,6 +54,27 @@ arguments read as a sentence — *what I seal · what I was given · who I am �
 
 ### 1. Action — `extends AbstractUi5Action`
 
+@if (version_compare(\LaravelUi5\Core\CoreLibrary::VERSION, '5.0', '>='))
+An action is declared in typed constants, like its identity: `METHOD` is an `HttpMethod` (POST/PATCH/DELETE
+only); `HANDLER` is the handler **class-string** (the dispatcher `container->make()`s it, so its constructor deps
+autowire); `REQUEST` is the **FormRequest class-string** that validates the body — left out when there is none.
+Never override the getters.
+
+```php
+#[Act('createGroup', SdkRole::TenantAdmin, note: 'Create a security group definition.')]
+class CreateGroupAction extends AbstractUi5Action
+{
+    public const string NAMESPACE = 'com.laravelui5.partners.actions.create_group';
+    public const string VERSION = '1.0.0';
+    public const string TITLE = 'Create Group';
+    public const string DESCRIPTION = 'Create a security group definition.';
+
+    public const HttpMethod METHOD = HttpMethod::POST;
+    public const string HANDLER = CreateGroupHandler::class;
+    public const string REQUEST = CreateGroupRequest::class;
+}
+```
+@else
 `getMethod()` returns an `HttpMethod` (POST/PATCH/DELETE only); `getHandler()` returns the
 handler **class-string** (the dispatcher `container->make()`s it, so its constructor deps
 autowire); `getRequest()` returns the **FormRequest class-string** that validates the body.
@@ -72,11 +93,13 @@ class CreateGroupAction extends AbstractUi5Action
     public function getRequest(): ?string { return CreateGroupRequest::class; }
 }
 ```
+@endif
 
-> **`getRequest()` is the authorization gate.** Resolving the FormRequest fires `authorize()`
-> (→ **403**) and validation (→ the **422** `{status, message, errors}` envelope) *before* the
-> DB transaction opens. **A `null` request SKIPS the gate** — so any `#[Act]`-secured action
-> **must** declare a FormRequest, even a bodyless `DELETE` (give it empty `rules()`).
+> **The `#[Act]` gate is the dispatcher's.** It checks the action's ability first (→ **403**), then
+> resolves the FormRequest, if the action names one, for validation (→ the **422**
+> `{status, message, errors}` envelope) — both *before* the DB transaction opens. A bodyless action
+> names no request; it is gated all the same. `authorize()` defaults to `true` —
+> override it only for a business check of your own.
 
 ### 2. Handler — `implements SdkActionHandlerInterface`
 
@@ -106,17 +129,19 @@ class UpdateGroupHandler implements SdkActionHandlerInterface
 ```
 
 **What you work with:**
-- `$context->validated()` — the validated body (populated from the action's `getRequest()`).
+- `$context->validated()` — the validated body (populated from the request the action names).
 - `$context->parameter('name')` — a resolved `#[Parameter]` route identifier (a model).
 - `$sdk->actor()` / `$sdk->abilities()` / `$sdk->setting('key')` — the acting partner + grants.
 
 **Sealing the outcome (do exactly one):**
-- `$transaction->commit($primaryMessage, $data = [])` — success. `$primaryMessage` lands in the
-  response `message` slot (a success toast on the client); `$data` is the payload (e.g. a new key).
-  Pass a **`MessageText`** — a key in the app's bundle, resolved on the server in the user's language;
-  a plain string is shown as written (use that only for an exception's message).
-- `$transaction->rollback(...)` — a **business** failure: undoes the transaction and returns the
-  typed error envelope.
+- `$transaction->commit(?MessageText $primary = null, $data = [])` — success. The headline lands in the
+  response `message` slot (a success toast on the client); leave it out for a silent success. `$data` is
+  the payload (e.g. a new key).
+- `$transaction->rollback(MessageText $primary)` — a **business** failure: undoes the transaction and
+  returns the typed error envelope. The headline is **required** — a refusal always names its reason,
+  and the business log records it under that key.
+- Both take a **`MessageText`** only — a key in the app's bundle, resolved on the server in the user's
+  language. **Never a string**, not even an exception's message: give the exception a key of its own.
 - `$transaction->touched('/EntitySet')` — mark OData paths the client should refresh post-commit.
 - `$transaction->info(MessageText::of('messages.<...>', [$param]))` — attach a business message. Its
   key lives in the app's bundle; the server resolves it and the response carries `text` beside `key`
@@ -124,6 +149,18 @@ class UpdateGroupHandler implements SdkActionHandlerInterface
 
 Returning without sealing — or returning a different response — is a `SealViolationException`.
 A thrown exception rolls the transaction back and serializes a technical failure.
+
+**Write through models — the audit sees nothing else.** A handler is a unit of work; the change log
+hangs on it.
+- Write **only** with `create` / `update` / `delete` / `save` on a loaded model, and relations through
+  a pivot model (`->using()`, `detach([$ids])` with explicit ids). **Never** `DB::table(...)->insert/
+  update/delete`, a builder `->delete()`, `upsert`, raw SQL, `saveQuietly()`, `deleteQuietly()`,
+  `withoutEvents()` or `truncate()`. Reading through the query builder is fine.
+- **Dispatch after the commit:** jobs, queued listeners and mail go out with `afterCommit()` — never for
+  a change that was rolled back.
+- **No outside effects inside the transaction** — no HTTP call, no file write; and never call the
+  `WorkUnitRunnerInterface` from a handler (no unit of work inside another — `NestedWorkUnitException`).
+- Bulk work over many rows is not an action — it is a job or command looping over a unit of work.
 
 ### 3. FormRequest — the payload + authorization contract
 
@@ -165,8 +202,8 @@ public const array ARTIFACTS = [
 ## Secure the action with `#[Act]`
 
 Security is opt-in: **an ungated action is an open door.** Declare an `#[Act]` on the **Action
-class**; `AbstractSdkFormRequest::authorize()` enforces it when `getRequest()` resolves (which is
-why a gated action must declare a FormRequest).
+class**; the dispatcher enforces it before validation, whether or not the action declares a
+FormRequest.
 
 ```php
 #[Act('createGroup', SdkRole::TenantAdmin, note: 'Create a security group definition.')]
@@ -207,8 +244,8 @@ class CreateGroupAction extends AbstractUi5Action { /* … */ }
 
 ## Verify
 
-- `php artisan ui5:sync --dry` → the action shows in `Artifacts +N`, and its `#[Act]` in
-  `Abilities +N` (registry boots and reflects it).
+- `php artisan ui5:sync` → the action shows in `Artifacts synced (+N, …)`, and its `#[Act]` in
+  `Abilities synced (+N, …)` (registry boots and reflects it).
 - `app({Name}Handler::class)` resolves → constructor DI is wired.
 - A gated action: an un-granted actor 403s; a granted actor commits (mirror
   `sdk-host/tests/Feature/GroupsCrudAuthzTest.php` / `PartnersUpdateTest.php`).
@@ -217,7 +254,7 @@ class CreateGroupAction extends AbstractUi5Action { /* … */ }
 
 `sdk-host/ui5/Partners/src/Actions/` —
 - **`SaveProfile`** (PATCH upsert) — the first typed handler: `{partner}` `#[Parameter]`,
-  body `id`+fields, `touched('/Partners')`, `commit('Profile added.', ['id' => …])`.
+  body `id`+fields, `touched('/Partners')`, `commit(MessageText::of('messages.profile.added'), ['id' => …])`.
 - **Group CRUD** (`CreateGroup` / `UpdateGroup` / `DeleteGroup` / `AddGroupRole` /
   `RemoveGroupRole`) — a full `SdkRole::TenantAdmin`-gated set; `AddGroupRole` shows a `{group}`
   route id + a `role_id` body field.
@@ -228,15 +265,17 @@ Pre-typed actions implement the empty marker `ActionHandlerInterface` with
 `handle(): array`, resolving the FormRequest + `#[Parameter]`s **as `handle()` arguments** via
 `Core\Runtime\ExecutableInvoker`, and returning a status array. The dispatcher's "family branch"
 still routes these. **Don't write new ones** — use the typed contract above — but recognize the
-shape (e.g. `CreateDepartmentHandler`, `DeleteProfileHandler`) when editing existing code.
+shape when editing existing code, and move it onto the typed contract when you touch it: a marker handler runs
+outside the unit-of-work runner, so nothing it writes reaches the audit. The SDK's own Partners handlers moved in 2.0.
 
 ## Checklist
 
 - [ ] Scaffolded with `ui5:action` (not hand-created); method is POST/PATCH/DELETE.
 - [ ] Handler `implements SdkActionHandlerInterface`; `handle(BusinessTransaction, BusinessContext, SdkContext): ActionResponse`; services in the constructor.
 - [ ] Seals exactly one outcome — `commit(...)` / `rollback(...)`; `touched('/…')` for refreshes.
+- [ ] Writes only through models (no `DB::table` writes, no quiet saves); dispatches with `afterCommit()`.
 - [ ] Inputs read off `$context->validated()` / `$context->parameter('…')`; actor off `$sdk`.
-- [ ] Action declares `getRequest()` (required for the `#[Act]` gate to fire — even bodyless DELETEs).
+- [ ] Action names its request when it has a body to validate (the `#[Act]` gate does not depend on it).
 - [ ] Route identifiers are `#[Parameter]` **Model** params; scalars are in the body.
 - [ ] Listed in the module's `ARTIFACTS`.
 - [ ] Secured with `#[Act(ability, SdkRole::…, note)]`; ability i18n keys provided; run `ui5:sync` to activate.
@@ -254,6 +293,28 @@ documented and enforced at runtime by `Core\Runtime\ExecutableInvoker`, which th
 
 ### 1. Action — `extends AbstractUi5Action`
 
+@if (version_compare(\LaravelUi5\Core\CoreLibrary::VERSION, '5.0', '>='))
+Three constants carry the wiring: `METHOD` is an `HttpMethod` (POST/PATCH/DELETE only — never GET/PUT),
+`HANDLER` the handler **class-string**, and `REQUEST` the **FormRequest class-string** that validates the body —
+left out when there is none. Never override the getters.
+
+@verbatim
+<code-snippet name="The action artifact" lang="php">
+use LaravelUi5\Core\Ui5\AbstractUi5Action;
+use LaravelUi5\Core\Ui5\Enums\HttpMethod;
+
+class ClearMailboxAction extends AbstractUi5Action
+{
+    public const string NAMESPACE = 'com.acme.invoicing.actions.clear-mailbox';
+    public const string VERSION   = '1.0.0';
+
+    public const HttpMethod METHOD = HttpMethod::POST;
+    public const string HANDLER    = ClearMailboxHandler::class;
+    public const string REQUEST    = ClearMailboxRequest::class;
+}
+</code-snippet>
+@endverbatim
+@else
 Three methods carry the wiring: `getMethod()` returns an `HttpMethod` (POST/PATCH/DELETE only —
 never GET/PUT), `getHandler()` returns the handler **class-string**, and `getRequest()` returns the
 **FormRequest class-string** that validates the body, or `null`.
@@ -274,6 +335,7 @@ class ClearMailboxAction extends AbstractUi5Action
 }
 </code-snippet>
 @endverbatim
+@endif
 
 ### 2. Handler — `implements ActionHandlerInterface`, `handle(): array`
 

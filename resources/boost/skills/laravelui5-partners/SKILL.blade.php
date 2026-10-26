@@ -5,11 +5,11 @@ description: >-
   connecting your User model, when asking "who is the actor", when modelling companies, people,
   departments, contacts or supplier relationships, or when the word "role" has become ambiguous.
   Covers the users.partner_id bridge and HasPartnerInterface, the four different things called
-  "role" and how to tell them apart, PartnerType, org partners vs tenant, the system actor for
-  non-human writes, and the #[PartnerRole] / #[RelationshipType] catalogs. Triggers: "partner",
-  "who is the current user", "users.partner_id", "HasPartner", "customer", "supplier",
-  "employed_by", "contact person", "system actor", "system_level", "org partner", "which role do I
-  mean", "sdk_partners".
+  "role" and how to tell them apart, PartnerType, org partners vs tenant, the installation's three
+  rows (platform owner, operator, tenant) and the automation actor, and the #[PartnerRole] /
+  #[RelationshipType] catalogs. Triggers: "partner", "who is the current user", "users.partner_id",
+  "HasPartner", "customer", "supplier", "employed_by", "acts_for", "contact person", "operator",
+  "tenant", "automation actor", "system_level", "org partner", "which role do I mean", "sdk_partners".
 license: MIT
 metadata:
   author: laravelui5
@@ -74,7 +74,7 @@ Mixing these up costs an afternoon. Ask which question you are answering:
 |:---|:---|:---|:---|
 | **System level** | where does this partner stand in the installation | `sdk_partners.system_level` | **no** |
 | **Role** | what may this partner **do** | `sdk_role_assignments` | **yes** — with abilities and groups |
-| **Membership** | whom does this partner **belong to** | `sdk_partner_relationships`, e.g. `employed_by` | no, but it **scopes data** |
+| **Membership** | whom does this partner **stand for** | `sdk_partner_relationships`: `employed_by` (employment) or `acts_for` (by commission) | no, but it **scopes data** |
 | **Partner role** | what **function** does this partner have in the business | `sdk_partner_role_assignments` | no |
 
 And the fourth splits again, by the catalog row's `PartnerRoleScope`:
@@ -92,30 +92,41 @@ classification grants nothing.
 ```php
 $context->actor();                    // the partner this request acts as
 $context->principal();                // who is really signed in (differs under impersonation)
-$context->primaryOrgPartner($at);     // the org the actor is a primary employee of, at that moment
+$context->primaryOrgPartner($at);     // the org the actor stands for (primary employed_by or acts_for), at that moment
 $context->orgPartners($at);           // all of them
-$context->tenant();                   // the owner of the site — the SaaS account boundary
+$context->tenant();                   // the company this installation runs for — the account boundary
 ```
 
 **Org partners are actor-related** — the business the signed-in person acts on behalf of. **The
 tenant is site-related** — the account boundary. They are not the same question and they never
 collide.
 
-Both org accessors take an explicit `Carbon $at`, because employment is time-bound, and both are
-**fail-closed**: no active primary employment at that moment returns an empty result, never
-"everything".
+Both org accessors take an explicit `Carbon $at`, because memberships are time-bound, and both are
+**fail-closed**: no active primary `employed_by` or `acts_for` at that moment returns an empty result,
+never "everything". Use `acts_for` for someone who works for an organisation without being employed by
+it — a freelancer, an agency's administrator; HR views (colleagues, contacts) read `employed_by` only.
 
-## The system actor — who wrote, when nobody did
+## The installation: who owns, who runs, for whom
 
-When a write happens that no person made — `ui5:sync` recording defaults, a scheduled job, a webhook
-— the **system actor** is recorded as its author. It is the platform owner: an ordinary partner at
-the top of the system-level ladder.
+Every database answers three questions with one row each, found **by key, never by a configured id**:
 
-The SDK reads `config('ui5.system_actor_id')` (default `env('UI5_SYSTEM_ACTOR_ID', 1)`), and
-`SystemActorResolverInterface` resolves it. **The default resolver fails loudly** —
-`MissingSystemActorException` if no partner has that id, `SystemActorEditLevelException` if it is not
-at platform-owner level. `ui5:sync` resolves it before writing, so a missing platform owner stops the
-first sync.
+| Row | Level | Written by |
+|:---|:---|:---|
+| **Platform owner** — Pragmatiqu IT GmbH (`PlatformOwner::KEY`), with its department *Support@Pragmatiqu* | `PlatformOwner` | `ui5:intake`, kept by `ui5:sync` |
+| **Operator** — whoever runs the installation; its `ext_ref` is `App\Installation::OPERATOR_KEY` | `OperatorAdmin` | `ui5:intake` |
+| **Tenant** — the company it runs for; the organisation the operator's `operator_for` points to | `TenantAdmin` (in-house: the operator's own row) | `ui5:tenant` |
+
+A new database is built by `ui5:intake` → `ui5:sync` → `ui5:tenant`. `ui5:tenant` also seats the **first
+chair** — one person on `OperatorAdmin`, acting for the operator, with a login; everyone else is seated in
+the Partners app. `App\Installation` (generated by `ui5:intake`, committed) holds the operator key and the
+installation's values as constants; inject `InstallationInterface`, never resolve `App\Installation`.
+
+## The automation actor — who wrote, when nobody did
+
+When a write happens that no person made — `ui5:sync`, a scheduled job, an automation command — the
+**automation actor** is recorded as its author: the partner whose e-mail the SDK setting `automation_actor`
+names, by default `support@pragmatiqu.io` (the support department). The operator may name another partner
+of any type in the Settings app. A missing partner stops the run.
 
 **It records who wrote. It is not an account that signs in, and it grants nothing.**
 
@@ -129,6 +140,10 @@ attributes, reconciled into their tables by `ui5:sync`:
 #[RelationshipType(code: 'employed_by', name: '…', directionalName: '…', reverseName: '…', scope: …)]
 ```
 
+The SDK ships `employed_by`, `acts_for`, `owns`, `shareholder_of`, `member_of`, `successor_of`,
+`affiliate_of` and the three rungs of a tenant's ladder (`LadderRung`: `operator_for`, `consultant_for`,
+`it_contact_for` — one holder per rung at a time; the Partners app refuses a second).
+
 They are the **vocabulary**, not the assignments. See the `laravelui5-settings` skill,
 `references/customizing.md` — and never write to those tables at runtime, because the next sync
 deletes undeclared rows.
@@ -139,6 +154,8 @@ deletes undeclared rows.
 - **Do not confuse `actor()` with `principal()`.** Under impersonation they differ, and using the
   wrong one is a silent privilege bug.
 - **Do not confuse an org partner with the tenant.**
+- **Do not configure a partner id for an installation role.** The platform owner, the operator and the
+  tenant are found by key and relationship; the automation actor by the setting's e-mail.
 - **Do not treat a `customer` or `supplier` classification as a permission.**
 - **Do not call `orgPartners()` without the time** — employment windows are why it takes one.
 - **Do not model a login as a partner**, or delete a partner to remove access. Delete the login
