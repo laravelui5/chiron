@@ -35,8 +35,8 @@
     },
     "conflict": {
         "laravelui5/odata": ">=4.0",
-        "laravelui5/core": "<4.0 || >=6.0",
-        "laravelui5/sdk": ">=2.0"
+        "laravelui5/core": "<4.0 || >=7.0",
+        "laravelui5/sdk": "<2.0 || >=3.0"
     },
     "minimum-stability": "stable",
     "prefer-stable": true

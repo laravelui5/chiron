@@ -195,6 +195,9 @@ suppliers, the shell, and a DB-backed registry.
 The SDK's registry is **database-backed**. Abilities, roles and the metadata catalog are projected
 from the code into tables by `php artisan ui5:sync`, and a row's id does not exist until it has run.
 
+**The tables come with `laravelui5/sdk-db`**, which the SDK requires at its own version: never require it
+yourself, and update the pair together with `composer update laravelui5/sdk -W`.
+
 **`migrate → sync → cache`, in that order, every deploy.** It is a hard contract, not a
 recommendation: `ui5:cache` writes references that carry DB ids, so caching before syncing caches
 ids that are not there yet.
@@ -276,7 +279,8 @@ audited command, audited job) composes units of work; a unit of work composes pl
   the business must prove; key by the stable code where the row travels.
 - **Never write an audited model from a plain controller, command or job** — run it as a unit of work through the
   runner. A write outside every unit of work inside a request, command or job fails a test (`source` Unmanaged in
-  production). Seeders and migrations are exempt.
+  production). A migration or a `db:seed` run that writes an audited table needs no unit of work: it leaves one
+  change-log head with `source` Migration, under the automation actor.
 - **List every `#[Audited]` model in `ui5.audit.models`** (the SDK's own are built in); a package appends its own in
   its service provider. The write rule needs the list: a query-builder write on a listed table fails a test.
 - **A Customizing catalog never carries `#[Audited]`.** It is vocabulary the code declares and

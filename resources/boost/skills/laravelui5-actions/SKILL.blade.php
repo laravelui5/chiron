@@ -107,10 +107,17 @@ Fixed signature: `handle(BusinessTransaction $transaction, BusinessContextInterf
 SdkContext $sdk): ActionResponse`. Per-request inputs come off `$context`; who-is-acting off
 `$sdk`; **services/repositories go in the constructor** (the handler is container-resolved).
 
+@if (version_compare(\LaravelUi5\Core\CoreLibrary::VERSION, '6.0', '>='))
+```php
+// UpdateGroupAction carries #[Parameter(name: 'group', …)]; the handler is free of the route
+class UpdateGroupHandler implements SdkActionHandlerInterface
+{
+@else
 ```php
 #[Parameter(name: 'group', uriKey: 'group', type: ParameterType::Model, model: Group::class)]
 class UpdateGroupHandler implements SdkActionHandlerInterface
 {
+@endif
     public function handle(
         BusinessTransaction $transaction,
         BusinessContextInterface $context,
@@ -183,8 +190,17 @@ class CreateGroupRequest extends AbstractSdkFormRequest
 
 ## `#[Parameter]` — route identifiers, **Model-only**, read off `$context`
 
+@if (version_compare(\LaravelUi5\Core\CoreLibrary::VERSION, '6.0', '>='))
 Place `#[Parameter(name, uriKey, type: ParameterType::Model, model: X::class)]` on the
-**Handler** class. They map positionally (declaration order) to the `/{uriKey}` path segments
+**Action** class, beside its `#[Act]` — never on the handler: the registry refuses it there at boot,
+naming the handler and its action. With the route on the action, the handler is a plain unit of work: declare it once
+more with an `AbstractWorkUnit` (`UNIT = UpdateGroupHandler::class`) and a job or a command runs it
+through `WorkUnitRunner::run()` with a `BusinessContext` you build — the head's `unit` names the
+declaration from every trigger. They map
+@else
+Place `#[Parameter(name, uriKey, type: ParameterType::Model, model: X::class)]` on the
+**Handler** class. They map
+@endif positionally (declaration order) to the `/{uriKey}` path segments
 the manifest builds, and are read in the handler via `$context->parameter('name')` — **not** as
 `handle()` arguments. **Hard constraint:** a `#[Parameter]` must be `ParameterType::Model` (an
 Eloquent model, route-model-bound). Everything scalar (ids, flags, values) goes in the body.
@@ -390,6 +406,10 @@ outcome on a `BusinessTransaction`. That contract is not available here.)*
 `#[Parameter]` declares a value the route carries into the action. Core's attribute set is
 deliberately small — `Parameter` is the only one — and the declared values arrive as `handle()`
 arguments through the invoker.
+@if (version_compare(\LaravelUi5\Core\CoreLibrary::VERSION, '6.0', '>='))
+Put it on the **action** class, not the handler — the registry refuses it on the handler at boot.
+A resource's goes on the **resource**, not its provider.
+@endif
 
 ## Register the action
 

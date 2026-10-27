@@ -8,50 +8,28 @@ packages it describes.
 Each release names the majors it was written against. A guideline that only holds for one major says
 so inline rather than forking the file.
 
-## [Unreleased] – SDK 2.0: what the stack says, in the user's language
+## [2.0.0] - 2026-10-27 – SDK 2.0: audited, in the user's language
 
-Written against **odata 3.2 · core 4.4 and 5.0 · sdk 2.0** (`meta/specs/sdk/i18n-v1.0.md`, `meta/specs/core/doctor-v1.0.md`). Ships with the SDK 2.0 tag;
-the version is named then. Audit, the Commands/Jobs envelopes and the rest of the 2.0 cut join this section.
+Written against **odata 3.2 · core 4.4, 5.0 and 6.0 · sdk 2.0** (`meta/specs/sdk/i18n-v1.0.md`, `meta/specs/sdk/audit-v1.0.md`,
+`meta/specs/sdk/audited-execution-v1.0.md`, `meta/specs/sdk/installation-v1.0.md`, `meta/specs/core/doctor-v1.0.md`). A
+**major**, because it leaves SDK 1.x: what it teaches about the SDK is 2.0 only, so the `conflict` bound on
+`laravelui5/sdk` is now `<2.0 || >=3.0` (was `>=2.0`). Ships with the SDK 2.0 tag and never alone.
 
 ### Added
 
 - **`ui5:doctor`** (core guideline, Core 5.0 only): run it after scaffolding and before debugging a UI5 app;
   apply the fix each finding names; a host's own check is a `host.W<n>` rule tagged `DoctorRuleInterface`.
   Guarded by `version_compare(CoreLibrary::VERSION, '5.0')`, so the line still serves Core 4.4. The `conflict`
-  bound on `laravelui5/core` moves from `>=5.0` to `>=6.0`.
+  bound on `laravelui5/core` moves from `>=5.0` to `>=6.0` (and with Core 6.0 to `>=7.0`, below).
 - **An action declares `METHOD`, `HANDLER`, `REQUEST` as constants** (`laravelui5-actions`, Core 5.0 only; Core
   ROADMAP `OP35`): both examples show the constants under Core 5.0 and the getters under 4.4.
+- **`#[Parameter]` on the action** (`laravelui5-actions`, Core 6.0 only; Core ROADMAP `OP37`,
+  `meta/specs/sdk/audited-execution-v1.0.md` D39, D40): both parts place it on the action, never on the handler,
+  which the registry refuses; the SDK part adds running a handler from a job or a command through an
+  `AbstractWorkUnit` declaration. Below 6.0 the handler keeps it. The `conflict` bound on `laravelui5/core` moves to
+  `>=7.0`.
 - **A card's provider takes `array $slots` from Core 5.0** (`laravelui5-artifacts`, references `widgets` and
   `reports`; Core ROADMAP `OP06`); on 4.x it reads a slot with `$context->slot()`.
-
-### Changed
-
-- **The installation, not a system actor** (`laravelui5-partners`, the SDK guideline; `meta/specs/sdk/installation-v1.0.md`
-  D6, D15–D21): the platform owner, the operator and the tenant are rows found by key and `operator_for`; a new
-  database is `ui5:intake` → `ui5:sync` → `ui5:tenant`; the automation actor is the SDK setting `automation_actor`
-  (an e-mail, by default the support department); `acts_for` beside `employed_by`; the ladder's rungs. The system
-  actor, `ui5.system_actor_id` and `UI5_AUTOMATION_ACTOR_ID` are gone.
-- **Texts are keys in the bundle of the module that declares them, and missing ones stop the build**
-  (`laravelui5-security`, `laravelui5-actions`, `laravelui5-settings`, `laravelui5-shell`): ability titles
-  (`abilities.<type>.<ability>.*`), setting titles (`settings.<key>.*`), Customizing fields
-  (`customizing.<catalog>.<code>.<column>`) stop `ui5:sync`; rail labels (`route.<key>.label`) stop `ui5:nav`;
-  `ui5:i18n` lists every missing one.
-- **`#[Weave]` has no `label`** — `weave.<concept>.label` in the declaring app's bundle; **`#[Concept]`'s `label`
-  is `marketplaceName`**, literal English for publishers (`laravelui5-shell`).
-- **What the server says is a `MessageText`** — an intent's `deny()`/`message()` (with `from(App::NAMESPACE)`),
-  an action's headline and messages, resolved on the server in the user's language (`laravelui5-shell`,
-  `laravelui5-actions`); a 422's field names from `fields.<field>`.
-- **The SDK's texts and the help `Context` live in the SDK's library `com.laravelui5.sdk`** (`laravelui5-shell`):
-  a key without `from()` is read there; an app lists `com.laravelui5.sdk` in `getResourceNamespaces()`
-  (`meta/specs/sdk/i18n-v1.0.md` D33).
-- **A headline is a `MessageText`, never a string; a refusal must have one** (`laravelui5-actions`):
-  `commit(?MessageText)`, `rollback(MessageText)` (`meta/specs/sdk/audit-v1.0.md` D41).
-- **A setting's declaration and its values are apart; the sync never rewrites a value** (`laravelui5-settings`):
-  a removed, renamed or retyped `#[Setting]` whose values no longer fit stops `ui5:sync` instead of deleting or
-  converting them (`meta/specs/sdk/audit-v1.0.md` D38).
-
-### Added
-
 - **Two skills for the audited triggers** (SDK): `laravelui5-commands` — the person and automation bases, the
   declaration, `#[Act]` only on person commands, `handleCommand()` and the runner; `laravelui5-jobs-and-units` — the
   unit of work and its seal, the audited job, `afterCommit()`, A1–A3 and K1, the catalogue opt-out. Both start from the
@@ -86,6 +64,37 @@ the version is named then. Audit, the Commands/Jobs envelopes and the rest of th
   (`#[Translatable]` + `HasTranslations`) read in the user's language, filter and sort included; editors bind the
   `translations` navigation; `setTranslations()` writes. `LaravelUi5.getLanguages()` in the facade table
   (`laravelui5-modules`).
+- **The tables come with `laravelui5/sdk-db`** (the SDK guideline): never required by hand; the pair updates with
+  `composer update laravelui5/sdk -W` (`meta/specs/platform/tms-v1.0.md` TR-D15).
+
+### Changed
+
+- **The installation, not a system actor** (`laravelui5-partners`, the SDK guideline; `meta/specs/sdk/installation-v1.0.md`
+  D6, D15–D21): the platform owner, the operator and the tenant are rows found by key and `operator_for`; a new
+  database is `ui5:intake` → `ui5:sync` → `ui5:tenant`; the automation actor is the SDK setting `automation_actor`
+  (an e-mail, by default the support department); `acts_for` beside `employed_by`; the ladder's rungs. The system
+  actor, `ui5.system_actor_id` and `UI5_AUTOMATION_ACTOR_ID` are gone.
+- **Texts are keys in the bundle of the module that declares them, and missing ones stop the build**
+  (`laravelui5-security`, `laravelui5-actions`, `laravelui5-settings`, `laravelui5-shell`): ability titles
+  (`abilities.<type>.<ability>.*`), setting titles (`settings.<key>.*`), Customizing fields
+  (`customizing.<catalog>.<code>.<column>`) stop `ui5:sync`; rail labels (`route.<key>.label`) stop `ui5:nav`;
+  `ui5:i18n` lists every missing one.
+- **`#[Weave]` has no `label`** — `weave.<concept>.label` in the declaring app's bundle; **`#[Concept]`'s `label`
+  is `marketplaceName`**, literal English for publishers (`laravelui5-shell`).
+- **What the server says is a `MessageText`** — an intent's `deny()`/`message()` (with `from(App::NAMESPACE)`),
+  an action's headline and messages, resolved on the server in the user's language (`laravelui5-shell`,
+  `laravelui5-actions`); a 422's field names from `fields.<field>`.
+- **The SDK's texts and the help `Context` live in the SDK's library `com.laravelui5.sdk`** (`laravelui5-shell`):
+  a key without `from()` is read there; an app lists `com.laravelui5.sdk` in `getResourceNamespaces()`
+  (`meta/specs/sdk/i18n-v1.0.md` D33).
+- **A headline is a `MessageText`, never a string; a refusal must have one** (`laravelui5-actions`):
+  `commit(?MessageText)`, `rollback(MessageText)` (`meta/specs/sdk/audit-v1.0.md` D41).
+- **A setting's declaration and its values are apart; the sync never rewrites a value** (`laravelui5-settings`):
+  a removed, renamed or retyped `#[Setting]` whose values no longer fit stops `ui5:sync` instead of deleting or
+  converting them (`meta/specs/sdk/audit-v1.0.md` D38).
+- **Migrations and `db:seed` are audited steps** (the SDK guideline): a write to an audited table leaves one
+  `Migration` head under the automation actor; the old "seeders and migrations are exempt" is gone
+  (`meta/specs/sdk/audit-v1.0.md` D47).
 
 ## [1.4.0] - 2026-10-22 – Core 4.0.0
 
