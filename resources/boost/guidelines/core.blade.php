@@ -39,13 +39,14 @@ the API.
   the generated document.
 - **Never convert a large-list custom entity set to `discoverModel()` for consistency.** See the
   performance gate below; that trade is the one expensive mistake.
-- **Never declare a plain `public $column;` on an Eloquent model** to attach an OData attribute. It
-  shadows the attribute bag: reads return `null`, writes are lost on `save()`. Use a PHP 8.4 property
-  with hooks, and write the `set` hook as a block (`set(?string $v) { $this->setAttribute('col', $v); }`).
-  The arrow form assigns the returned model to the property and throws on direct assignment.
-- **Never leave secrets declared in `$metadata`.** `$hidden` keeps a column out of the rows but not
-  out of the schema, and a declared column is filterable. Put `#[ODataEntity(useHidden: true)]` on
-  models with `$hidden` columns (odata 3.1+).
+- **Never put anything OData on a PHP property of an Eloquent model.** A declared property shadows
+  the attribute bag (reads return `null`, writes are lost on `save()`), and since odata 4.0 nothing
+  reads one. Every OData declaration sits on the class: `#[ODataAnnotate('column', …)]` for a
+  column's vocabulary terms, `#[ODataComputed(…)]` for a value without a column. Renaming, retyping
+  or cutting a column is a custom entity set, never an attribute.
+- **Keep secrets out with `$hidden` (or `$visible`).** Since odata 4.0 what the model never
+  serializes is neither declared in `$metadata` nor filterable nor sent. The key must stay
+  serializable.
 
 ### Declaring a service
 

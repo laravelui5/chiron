@@ -7,14 +7,15 @@ Use `search-docs` for authoritative documentation on model discovery.
 One call — `$this->discoverModel(Order::class)` — produces the entity type, the entity set, and the
 key. Specifically it:
 
-- reads the table and maps **every column** to a typed EDM property (minus `#[ODataIgnore]`, and
-  minus `$hidden` when the class says `#[ODataEntity(useHidden: true)]`);
-- lets **Eloquent casts override** the database type, so an `array` cast or a date cast wins over
-  what the column says;
+- reads the table and maps **every column the model serializes** to a typed EDM property: a
+  non-empty `$visible` admits only what it names, `$hidden` removes from that;
+- lets **Eloquent casts override** the database type, so a date cast wins over what the column says.
+  An `array`/`json`/`object`/`collection` cast is `Edm.String` and goes out as its JSON text;
 - since odata 3.1, takes the **facets** from the column: `Nullable`, `Precision`/`Scale` from
   `decimal(p,s)`, `MaxLength` from `varchar(n)`. UI5 formats and validates input by them;
 - detects the **primary key**;
-- turns `HasMany`, `BelongsTo`, `HasOne` and `BelongsToMany` into **navigation properties**.
+- turns `HasMany`, `BelongsTo`, `HasOne` and `BelongsToMany` into **navigation properties**, named
+  like the method, minus relations in `$hidden`.
   **Polymorphic relations stay out, all of them** (`morphTo`, `morphMany`, `morphOne`,
   `morphToMany`, `morphedByMany`), and so do through-relations. A polymorphic join runs over a type
   column plus an id, which `$metadata` cannot state. To serve such an edge, model it explicitly: a
@@ -32,63 +33,99 @@ $this->discoverModel(Customer::class); // without this, Order::customer() is not
 
 If an `$expand` returns a 400 for an unknown navigation property, this is almost always why.
 
-## The four attributes
+## What the model never serializes is not declared
 
-All live in `LaravelUi5\OData\Service\Discovery\Attributes`.
+Since odata 4.0, `$hidden` and `$visible` are the schema, always:
 
 ```php
-use LaravelUi5\OData\Service\Discovery\Attributes\{ODataEntity, ODataProperty, ODataNavigation, ODataIgnore};
-
-#[ODataEntity(name: 'Order', entitySet: 'Orders', useHidden: true)]   // class; all arguments optional
-class Order extends Model
+class Account extends Model
 {
-    protected $hidden = ['internal_token'];        // with useHidden: not in $metadata, not filterable
-
-    #[ODataProperty(name: 'netAmount', nullable: false, precision: 19, scale: 4)]   // property
-    public ?string $amount {
-        get => $this->getAttribute('amount');
-        set(?string $value) { $this->setAttribute('amount', $value); }
-    }
-
-    #[ODataIgnore]                                    // property or method
-    public ?string $internal_note {
-        get => $this->getAttribute('internal_note');
-        set(?string $value) { $this->setAttribute('internal_note', $value); }
-    }
-
-    #[ODataNavigation(name: 'customer')]              // method
-    public function buyer() { return $this->belongsTo(Customer::class); }
+    protected $hidden = ['password', 'tokens'];   // a column and a relation
 }
 ```
 
-### A column attribute needs a hooked property — never a plain one
+`password` and `tokens` are neither in `$metadata` nor on the wire; `$select`, `$filter` and
+`$orderby` naming them answer `400`. **The key must stay serializable** — a key in `$hidden` or
+outside `$visible` fails loudly when the schema is built. Two models resolving to the same type or set
+name fail loudly too, naming both classes.
 
-Column-level attributes (`#[ODataProperty]`, `#[ODataIgnore]`, vocabulary annotations) are read from a
-declared PHP property named like the column. **A plain `public $amount;` breaks the model:** it shadows
-Eloquent's attribute bag, so reads return `null` and writes are lost on `save()`. Declare a PHP 8.4
-property with hooks that delegate to the bag, exactly as above:
+## The wire carries exactly the declared properties
 
-- **Write `set` as a block.** `set($v) => $this->setAttribute('col', $v)` *assigns* the returned model
-  to the property, and `$order->amount = …` then throws a `TypeError`. Mass assignment
-  (`create()`, `fill()`, `update()`) bypasses the hook and hides the bug.
-- **Type it nullable.** The `get` hook returns whatever the bag holds, and that is `null` for a
-  column a fresh model has not been given yet.
-- Only annotated columns need this. Every other column keeps going through `__get()`.
+A discovered row — list, single entity, expanded at any depth — carries the type's declared
+properties, the expanded navigations with their `@odata.count`, and the `$compute` aliases. What
+else `toArray()` holds stays behind: `$appends`, a `belongsToMany` row's `pivot`, a relation loaded
+through `$with` but not expanded. **If a client needs a value, declare it** (a column, a computed
+property below) or serve a custom entity set. Never expect an accessor to reach the client.
 
-### What each attribute is for
+## The class attributes
 
-Every argument is optional and every attribute is an **override**. Discovery already derives the
-type name from the class, the set name from the table, the property names from the columns, the
-facets from the column types and the navigation names from the relation methods. Add an attribute
-when the derived value is wrong for the wire contract, not to document what is already true.
+All live in `LaravelUi5\OData\Service\Discovery\Attributes`, and all sit on the **class**. Nothing
+OData goes on a PHP property of the model: a declared property shadows Eloquent's attribute bag, and
+nothing reads one.
 
-- **`useHidden: true`** (since 3.1) is the one to reach for on any model with secrets in `$hidden`.
-  Without it, a hidden column never leaves the server but is still *declared*, and a declared
-  column is filterable: `$filter=startswith(password,'$2y')` interrogates it. The key always stays.
-- **`#[ODataIgnore]`** keeps a single column, accessor or relation out of the schema.
-- **`nullable:`, `precision:`, `scale:`** (since 3.1) override the column's facets for one model.
-  An override that the type cannot carry (`scale` on a string, `scale` above `precision`) fails
-  loudly when the schema is built.
+```php
+use LaravelUi5\OData\Edm\Annotation\Path;
+use LaravelUi5\OData\Edm\EdmPrimitiveType;
+use LaravelUi5\OData\Service\Discovery\Attributes\{ODataAnnotate, ODataComputed, ODataEntity};
+use LaravelUi5\OData\Vocabularies\Common\V1\Label;
+use LaravelUi5\OData\Vocabularies\Measures\V1\{ISOCurrency, Unit};
+
+#[ODataEntity(name: 'Item', entitySet: 'Items')]                              // names only, both optional
+#[ODataComputed('currency', EdmPrimitiveType::String, nullable: false, maxLength: 3)]
+#[ODataComputed('unit', EdmPrimitiveType::String, maxLength: 3)]
+#[ODataAnnotate('price', new ISOCurrency(new Path('currency')))]             // a column's terms
+#[ODataAnnotate('quantity', new Unit(new Path('unit')))]
+#[ODataAnnotate('name', new Label('Item'))]
+class ServiceItem extends Model
+{
+    protected $hidden = ['internal_note'];          // not declared, not filterable, not sent
+}
+```
+
+- **`#[ODataEntity(name:, entitySet:)]`** names the type and the set. Add it when the derived name
+  is wrong for the contract — two classes with the same short name, or an English plural that does
+  not fit (`Person` → `People`) — not to restate it.
+- **`#[ODataAnnotate('column', …terms)]`** puts vocabulary terms on one declared property. Repeat
+  it freely. A name the type does not declare (a typo, a hidden column) fails loudly. A term written
+  directly on the class annotates the entity type instead. See `annotations.md`.
+- **`#[ODataComputed('name', EdmPrimitiveType::…, nullable:, maxLength:, precision:, scale:)]`**
+  declares a property with no column — the code beside a code-list `…_id`, the tenant's base
+  currency next to an amount. Its value is an SQL expression from the bound
+  `ColumnExpressionResolverInterface`, asked with the model class and the name:
+
+```php
+final class ItemExpressions implements ColumnExpressionResolverInterface
+{
+    public function __construct(private readonly string $baseCurrency) {}   // e.g. the tenant's, per request
+
+    public function expression(string $source, string $property): ?string
+    {
+        return $source !== ServiceItem::class ? null : match ($property) {
+            'currency' => "'" . $this->baseCurrency . "'",
+            'unit'     => '(select code from units where units.id = service_items.unit_id)',
+            default    => null,
+        };
+    }
+}
+```
+
+  The engine selects `(<expression>) AS name` on every read, and `$filter`, `$orderby`, `$search`
+  and `$compute` use it. The name must not be a column and must be serializable; a computed property
+  no resolver answers fails when queried. **Prefer this over a custom entity set** when the model is
+  right and only one or two values are missing.
+
+### Upgrading a 3.x model
+
+`#[ODataProperty]`, `#[ODataIgnore]` and `#[ODataNavigation]` are gone, and with them the hooked
+properties they needed. `useHidden:` is gone from `#[ODataEntity]`; drop the argument.
+
+| 3.x | 4.0 |
+|:---|:---|
+| `#[ODataIgnore]` | the model's `$hidden` |
+| `#[ODataProperty(nullable:, precision:, scale:)]` | a `ColumnFacetResolverInterface` answering for model and column |
+| `#[ODataProperty(type:)]` | a cast |
+| `#[ODataProperty(name:)]`, `#[ODataNavigation(name:)]` | a custom entity set |
+| a vocabulary attribute on a hooked property | `#[ODataAnnotate]` on the class; delete the hooked property |
 
 ## Facets that depend on the installation
 
@@ -96,7 +133,10 @@ Some facets are not a fact of the column. A unit price stored as `decimal(19,6)`
 announced with the installation's price decimals. For that, bind a
 `LaravelUi5\OData\Service\Contracts\ColumnFacetResolverInterface` (since 3.1). Discovery calls it for
 every column with the model class, the column, the model's cast and the schema's facets, and uses
-the facets it returns. The order is schema → resolver → attribute.
+the facets it returns. The order is schema → resolver. Because it receives the model class, it also
+answers for one model (`$modelClass === Product::class && $column === 'unit_price'`). A facet the
+type cannot carry (`scale` on a string, `scale` above `precision`) fails loudly when the schema is
+built.
 
 ```php
 final class PriceDecimals implements ColumnFacetResolverInterface

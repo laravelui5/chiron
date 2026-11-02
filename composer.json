@@ -34,7 +34,7 @@
         "laravelui5/sdk": "The production runtime these guidelines teach."
     },
     "conflict": {
-        "laravelui5/odata": ">=4.0",
+        "laravelui5/odata": "<4.0 || >=5.0",
         "laravelui5/core": "<4.0 || >=7.0",
         "laravelui5/sdk": "<2.0 || >=3.0"
     },

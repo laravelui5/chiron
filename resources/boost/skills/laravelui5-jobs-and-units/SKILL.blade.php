@@ -41,8 +41,10 @@ php artisan ui5:unit {App}/{Name}    # Units/{Name}Unit.php + {Name}UnitDeclarat
 php artisan ui5:job {App}/{Name}     # Jobs/{Name}Job.php + {Name}JobDeclaration.php
 ```
 
-Each prints what to add: the declaration in `{App}Module::ARTIFACTS`, the unit's label
-`units.<namespace>` (and its message key) in the module's bundles, en and de, then `ui5:sync`.
+Each prints what to add: the declaration in `{App}Module::ARTIFACTS`, the label
+`units.<namespace>` or `jobs.<namespace>` (a unit's message key too) in the module's bundles, en and de, then
+`ui5:sync`. The declaration's `TITLE` binds that key, `{i18n>units.<namespace>}`; it is the label a reader of the
+change log sees. Without the key the label is the namespace.
 
 ## A unit of work
 

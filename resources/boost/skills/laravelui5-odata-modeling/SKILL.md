@@ -10,8 +10,9 @@ description: >-
   streaming rows rather than hydrating models. Triggers: "add an entity set", "expose this model
   over OData", "OData read", "master/detail", "$expand", "$filter", "$metadata", "discoverModel",
   "custom entity set", "AbstractEntitySet", "virtual expand", "the OData list is slow", "how do I
-  filter/sort/page this", "expose an enum over OData", "odata:cache", "annotation", "currency/unit
-  decimals in UI5", "code list", "hide a column from OData", "$hidden".
+  filter/sort/page this", "expose an enum over OData", "odata:cache", "annotation", "ODataAnnotate",
+  "computed property", "ODataComputed", "currency/unit decimals in UI5", "code list", "hide a column
+  from OData", "$hidden", "$visible", "rename a property".
 license: MIT
 metadata:
   author: laravelui5
@@ -46,6 +47,16 @@ relationships nobody has written yet. Reach for a custom entity set or a virtual
 
 If you are writing a custom entity set and the honest answer to *"is this just a relation or a
 scope?"* is yes — stop and go back to the model.
+
+## Two surfaces, nothing in between (odata 4.0)
+
+**A discovered model is described by its table and its class.** What goes beyond the table is
+declared on the model's class; what depends on the runtime comes from a resolver bound in the
+container. Every declaration adds to discovery, none overrides it, and the wire carries exactly what
+`$metadata` declares.
+
+So a set is either a discovered model or a custom entity set. Renaming a column, giving it another
+type or serving a cut of the table is a custom entity set's job, never an attribute on the model.
 
 ## The performance gate — row count overrides the tree
 
@@ -88,8 +99,9 @@ discovered `Orders` *collection* on a large table — that is what `OrderList` i
 
 ## Which reference to read before implementing
 
-- **`references/discovery.md`** — what `discoverModel()` derives, the four attributes, casts,
-  relations as navigation properties, and virtual expands (contract and scope).
+- **`references/discovery.md`** — what `discoverModel()` derives, `$hidden`/`$visible`, the class
+  attributes (`#[ODataEntity]`, `#[ODataAnnotate]`, `#[ODataComputed]`), casts, relations as
+  navigation properties, and virtual expands (contract and scope).
 - **`references/custom-entity-sets.md`** — when a custom set is justified, the measured numbers,
   the `columns()` contract, backed enums as `Edm.EnumType`, streaming.
 - **`references/annotations.md`** — vocabulary terms, `Path` values, container annotations, and the
@@ -125,7 +137,9 @@ language and any language that is not one of the tenant's further ones (`Laravel
 - **Do not write a controller, API resource or `?include=` convention** for data an OData service
   already serves. Declaring the service is the endpoint.
 - **Do not hand-write or edit CSDL.** `$metadata` is generated from the model and the annotations.
-- **Do not add `#[ODataEntity]` or `#[ODataNavigation]` for their own sake.** They exist to
-  override what discovery already derives correctly.
-- **Do not declare a plain `public $column;` on an Eloquent model** to hang an attribute on. It
-  shadows the attribute bag. Use a hooked property with a block `set` (see `references/discovery.md`).
+- **Do not add `#[ODataEntity]` for its own sake.** It names the type and the set; discovery derives
+  both from the class.
+- **Do not put anything OData on a PHP property of a model** — no plain `public $column;`, no hooked
+  property. A declared property shadows Eloquent's attribute bag, and since odata 4.0 nothing reads
+  one. A column's terms go in `#[ODataAnnotate]` on the class, a value without a column in
+  `#[ODataComputed]`, a hidden column in `$hidden`.

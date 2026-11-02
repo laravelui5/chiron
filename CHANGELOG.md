@@ -8,6 +8,30 @@ packages it describes.
 Each release names the majors it was written against. A guideline that only holds for one major says
 so inline rather than forking the file.
 
+## [Unreleased]
+
+Written against **odata 4.0** (`odata/ROADMAP.md`, *Next major*). What the OData skill teaches is 4.0 only, so the
+`conflict` bound on `laravelui5/odata` is now `<4.0 || >=5.0` (was `>=4.0`) — a **major** for this package, as 2.0.0
+was when it left SDK 1.x. Ships with the odata 4.0 tag and never before it.
+
+- **Two surfaces, nothing in between** (`laravelui5-odata-modeling`, core guideline). A discovered model is described by
+  its table and its class; a rename, another type or a cut of a column is a custom entity set. Nothing OData goes on a
+  PHP property of a model any more: the hooked-property idiom and its `set`-block warning are gone, and so are
+  `#[ODataProperty]`, `#[ODataIgnore]`, `#[ODataNavigation]` and `useHidden:` (odata `OP38`, `OP41`).
+- **`$hidden` and `$visible` are the schema** — not declared, not filterable, not sent; the key must stay
+  serializable. The core guideline's secrets rule says so instead of prescribing `useHidden` (odata `OP41`).
+- **`#[ODataAnnotate('column', …terms)]`** for a column's vocabulary, and `ColumnAnnotationResolverInterface` for a
+  package annotating columns across models; the annotation and code-list examples use it (odata `OP35`).
+- **`#[ODataComputed]`** for a value with no column — the code beside a code-list `…_id`, a tenant's base currency —
+  its value from `ColumnExpressionResolverInterface`; preferred over a custom entity set when only a value or two is
+  missing (odata `OP34`).
+- **What the wire carries** (`consuming.md`): exactly the declared properties (no `$appends`, no `pivot`), a JSON cast as
+  text, `$compute` on declared properties only, function imports in the service document (odata `OP36`, `OP39`,
+  `OP40`, `OP11`).
+- A 3.x → 4.0 table in `references/discovery.md`, per removed attribute.
+
+- **The label of a command, job or unit is its artifact title.** The commands and jobs-and-units skills teach `TITLE = '{i18n>commands.<namespace>}'` and its key in the module's bundles. (`meta/specs/ui5/audit-v1.0.md` D5.)
+
 ## [2.0.0] - 2026-10-27 – SDK 2.0: audited, in the user's language
 
 Written against **odata 3.2 · core 4.4, 5.0 and 6.0 · sdk 2.0** (`meta/specs/sdk/i18n-v1.0.md`, `meta/specs/sdk/audit-v1.0.md`,

@@ -16,9 +16,10 @@ GET /odata/
 
 Supported: `$filter`, `$select`, `$expand` (nested), `$orderby`, `$top`, `$skip`, `$count`,
 `$search`, `$compute`, and `$batch` with partial failure. Functions and singletons are available on
-the schema.
+the schema; the service document (`GET /odata/`) lists entity sets, singletons and function imports,
+less those built with `includedInServiceDocument: false`.
 
-What the engine does with them, as of odata 3.1. Each point is a behaviour clients rely on:
+What the engine does with them, as of odata 4.0. Each point is a behaviour clients rely on:
 
 - **`$filter` refuses what it cannot translate.** Supported: `eq ne gt ge lt le in and or not`,
   `contains startswith endswith` (matched literally, `%` and `_` are not wildcards), `tolower` /
@@ -37,7 +38,12 @@ What the engine does with them, as of odata 3.1. Each point is a behaviour clien
   limited by its `$top`. Not on a single-valued navigation (`400`), not on a virtual one (`501`).
 - **`IEEE754Compatible=true`** in `Accept` (UI5 always sends it) writes `Edm.Decimal` and
   `Edm.Int64` as strings, so no digit is lost. Without it they are JSON numbers. Every property
-  goes out as its declared type: booleans as `true`/`false`, `Edm.Binary` base64url-encoded.
+  goes out as its declared type: booleans as `true`/`false`, `Edm.Binary` base64url-encoded, a
+  JSON cast (`Edm.String`) as its JSON text, which the client parses.
+- **A row carries exactly the declared properties.** No `$appends`, no `pivot`, no relation that was
+  loaded but not expanded. A value missing from the row is missing from `$metadata`: declare it.
+- **`$compute` names declared properties only.** An undeclared name answers
+  `400 unknown_property`, as in `$filter`.
 
 **Out of scope by design:** writes of any kind, OData actions, ETags, and `$apply`. If a task needs
 one of those, it is not a task for this engine.
