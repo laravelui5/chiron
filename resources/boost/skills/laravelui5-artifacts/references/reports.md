@@ -24,7 +24,6 @@ table.** A report is a document you read or print, not a grid you interrogate.
 class HoursReport extends AbstractUi5Report
 {
     public const string NAMESPACE   = 'com.acme.timesheet.reports.hours';
-    public const string VERSION     = '1.0.0';
     public const string TITLE       = 'Booked Hours';
     public const string DESCRIPTION = 'Hours booked by employees this period';
 

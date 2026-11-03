@@ -29,6 +29,38 @@ A **package** that annotates columns across models (the SDK marks translated fie
 with the model class and the column. On the same term and qualifier the model's `#[ODataAnnotate]`
 wins. It runs at schema build, so `odata:cache` freezes its answer.
 
+## Records are typed objects, passed by name
+
+A term whose value is a record, or a list of records, takes **objects of the vocabulary's record
+classes**, never strings. `UI.LineItem` is the common case: one record per column or button.
+
+```php
+use LaravelUi5\OData\Edm\Annotation\Path;
+use LaravelUi5\OData\Vocabularies\Ui\V1\{CriticalityType, DataField, DataFieldForAction, LineItem};
+
+#[LineItem([
+    new DataField(value: new Path('name'), label: 'Product'),
+    new DataField(value: new Path('status'), criticality: CriticalityType::Positive),
+    new DataFieldForAction(action: 'App.Products.approve', label: 'Approve'),
+])]
+class Product extends Model {}
+```
+
+- **Always named arguments.** Every field of a record class (own and inherited) and of a term whose
+  type is one record (`new PresentationVariant(maxItems: 10, includeGrandTotal: true)`) is a named,
+  optional parameter in vocabulary order. Never call them positionally.
+- **Pick the concrete record type:** `DataField` for a column, `DataFieldForAction` for a button,
+  `DataFieldWithUrl` for a link. A list term accepts any record deriving from its base
+  (`DataFieldAbstract`).
+- **Enumerations are enum cases** (`FieldControlType::Mandatory`); a flags enumeration takes a list
+  (`new Permissions([Permission::Read, Permission::Write])`).
+- **An open primitive type** (`Validation.Minimum`, `Maximum`, `Common.UnitSpecificScale`, …) takes the
+  value first and the kind only when the value cannot say it: `new Minimum(0)`,
+  `new Minimum('2026-01-01', EdmPrimitiveType::Date)`.
+- **The schema build fails loud** with a `LogicException` on a missing required field, a term
+  without its value, or a string where a record is due (`#[LineItem(['name'])]`). Fix the call;
+  never catch it.
+
 ## A value read per row is a `Path`
 
 Some terms do not carry a fixed value; they point at another property of the same entity. The
@@ -43,11 +75,15 @@ class Order extends Model {}
 ```
 
 The path may point at a column or at an `#[ODataComputed]` property (the tenant's base currency
-when the row stores none). That writes `<Annotation Term="Org.OData.Measures.V1.ISOCurrency" Path="currency"/>`. A `Path` is
-accepted by `Measures` (`ISOCurrency`, `Unit`, `Scale`, …), `CodeList.StandardCode`, `Common.Text`,
-`Common.UnitSpecificScale` and `Common.UnitSpecificPrecision`. Other vocabularies do not take one yet.
-If you need it there, build the annotation programmatically with
-`new ConstantAnnotationValue('Path', 'column')`, and don't edit the generated class.
+when the row stores none). That writes `<Annotation Term="Org.OData.Measures.V1.ISOCurrency" Path="currency"/>`.
+
+**Every term and every record field accepts a `Path`**, enumerations included:
+`new FieldControl(new Path('fieldControl'))` is the usual way to make a field mandatory per row.
+
+A term or field whose type is a model path (`Edm.PropertyPath`, `Edm.NavigationPropertyPath`, …)
+takes a **string** for the path itself (`PropertyPath="code"`, the CSDL form) and a `Path` for a
+value path (`Path="code"`). Use the string, except where a SAP client reads the value path:
+`CodeList.StandardCode` (below). Never edit a generated class; regenerate it.
 
 ## Service-wide terms go on the container
 
@@ -61,12 +97,15 @@ protected function configure(EdmBuilderInterface $builder): EdmBuilderInterface
         new CurrencyCodes(url: '../codelists@1.0.0/$metadata', collectionPath: 'Currencies'),
     );
 
-    return $builder->namespace($this->namespace());
+    return $builder->namespace($this->namespace())->useVocabulary(Vocabulary::CodeList);
 }
 ```
 
-`annotateContainer()` is on `ODataService`. Do not look for it on `EdmBuilderInterface`, where it
-arrives with the next major.
+Reference every vocabulary whose terms you use with `useVocabulary(Vocabulary::…)` — one case per shipped
+vocabulary, `CodeList` included. Never hand-write an `edmx:Reference` for a built-in vocabulary.
+
+Call `annotateContainer()` on `ODataService` in `configure()`: it takes generated terms. Since odata 4.0 the builder
+interface has it too, for plain annotations.
 
 ## Currencies and units: code lists
 
@@ -81,12 +120,16 @@ announces. Three pieces, all required:
    `url` (relative to the service URL; a static value, no resolver) and `collectionPath` (the set).
 3. **The code-list set annotates its single key** with `Common.UnitSpecificScale`, `Common.Text`
    and optionally `CodeList.StandardCode`, each as a `Path` to a column, in one
-   `#[ODataAnnotate('code', …)]` on the code-list model.
+   `#[ODataAnnotate('code', new UnitSpecificScale(new Path('decimals')), new Text(new Path('name')), new StandardCode(new Path('iso')))]`
+   on the code-list model.
 
 Rules that cost a debugging session when broken:
 
 - **`UnitSpecificScale` must never be null.** UI5 drops that entry, and every amount in that
   currency renders **empty**.
+- **`StandardCode` takes `new Path('iso')`, not `'iso'`.** OpenUI5 reads it as a value path
+  (`…StandardCode/$Path`); the string writes `PropertyPath`, the CSDL form, in which UI5 finds
+  nothing. This is a deliberate departure from CSDL §14.4.1, for SAP compatibility.
 - **The code-list set must not be paged.** UI5 reads it without `$top` and takes the first page
   only. Leave `odata.pagination.default` unset on a service that serves code lists.
 - **The texts follow `Accept-Language`.** UI5 sends no `sap-language` unless the app puts one into

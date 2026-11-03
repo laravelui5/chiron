@@ -54,7 +54,6 @@ arguments read as a sentence — *what I seal · what I was given · who I am �
 
 ### 1. Action — `extends AbstractUi5Action`
 
-@if (version_compare(\LaravelUi5\Core\CoreLibrary::VERSION, '5.0', '>='))
 An action is declared in typed constants, like its identity: `METHOD` is an `HttpMethod` (POST/PATCH/DELETE
 only); `HANDLER` is the handler **class-string** (the dispatcher `container->make()`s it, so its constructor deps
 autowire); `REQUEST` is the **FormRequest class-string** that validates the body — left out when there is none.
@@ -65,7 +64,6 @@ Never override the getters.
 class CreateGroupAction extends AbstractUi5Action
 {
     public const string NAMESPACE = 'com.laravelui5.partners.actions.create_group';
-    public const string VERSION = '1.0.0';
     public const string TITLE = 'Create Group';
     public const string DESCRIPTION = 'Create a security group definition.';
 
@@ -74,26 +72,6 @@ class CreateGroupAction extends AbstractUi5Action
     public const string REQUEST = CreateGroupRequest::class;
 }
 ```
-@else
-`getMethod()` returns an `HttpMethod` (POST/PATCH/DELETE only); `getHandler()` returns the
-handler **class-string** (the dispatcher `container->make()`s it, so its constructor deps
-autowire); `getRequest()` returns the **FormRequest class-string** that validates the body.
-
-```php
-#[Act('createGroup', SdkRole::TenantAdmin, note: 'Create a security group definition.')]
-class CreateGroupAction extends AbstractUi5Action
-{
-    public const string NAMESPACE = 'com.laravelui5.partners.actions.create_group';
-    public const string VERSION = '1.0.0';
-    public const string TITLE = 'Create Group';
-    public const string DESCRIPTION = 'Create a security group definition.';
-
-    public function getMethod(): HttpMethod { return HttpMethod::POST; }
-    public function getHandler(): string { return CreateGroupHandler::class; }
-    public function getRequest(): ?string { return CreateGroupRequest::class; }
-}
-```
-@endif
 
 > **The `#[Act]` gate is the dispatcher's.** It checks the action's ability first (→ **403**), then
 > resolves the FormRequest, if the action names one, for validation (→ the **422**
@@ -107,17 +85,10 @@ Fixed signature: `handle(BusinessTransaction $transaction, BusinessContextInterf
 SdkContext $sdk): ActionResponse`. Per-request inputs come off `$context`; who-is-acting off
 `$sdk`; **services/repositories go in the constructor** (the handler is container-resolved).
 
-@if (version_compare(\LaravelUi5\Core\CoreLibrary::VERSION, '6.0', '>='))
 ```php
 // UpdateGroupAction carries #[Parameter(name: 'group', …)]; the handler is free of the route
 class UpdateGroupHandler implements SdkActionHandlerInterface
 {
-@else
-```php
-#[Parameter(name: 'group', uriKey: 'group', type: ParameterType::Model, model: Group::class)]
-class UpdateGroupHandler implements SdkActionHandlerInterface
-{
-@endif
     public function handle(
         BusinessTransaction $transaction,
         BusinessContextInterface $context,
@@ -190,17 +161,12 @@ class CreateGroupRequest extends AbstractSdkFormRequest
 
 ## `#[Parameter]` — route identifiers, **Model-only**, read off `$context`
 
-@if (version_compare(\LaravelUi5\Core\CoreLibrary::VERSION, '6.0', '>='))
 Place `#[Parameter(name, uriKey, type: ParameterType::Model, model: X::class)]` on the
 **Action** class, beside its `#[Act]` — never on the handler: the registry refuses it there at boot,
 naming the handler and its action. With the route on the action, the handler is a plain unit of work: declare it once
 more with an `AbstractWorkUnit` (`UNIT = UpdateGroupHandler::class`) and a job or a command runs it
 through `WorkUnitRunner::run()` with a `BusinessContext` you build — the head's `unit` names the
-declaration from every trigger. They map
-@else
-Place `#[Parameter(name, uriKey, type: ParameterType::Model, model: X::class)]` on the
-**Handler** class. They map
-@endif positionally (declaration order) to the `/{uriKey}` path segments
+declaration from every trigger. They map positionally (declaration order) to the `/{uriKey}` path segments
 the manifest builds, and are read in the handler via `$context->parameter('name')` — **not** as
 `handle()` arguments. **Hard constraint:** a `#[Parameter]` must be `ParameterType::Model` (an
 Eloquent model, route-model-bound). Everything scalar (ids, flags, values) goes in the body.
@@ -309,7 +275,6 @@ documented and enforced at runtime by `Core\Runtime\ExecutableInvoker`, which th
 
 ### 1. Action — `extends AbstractUi5Action`
 
-@if (version_compare(\LaravelUi5\Core\CoreLibrary::VERSION, '5.0', '>='))
 Three constants carry the wiring: `METHOD` is an `HttpMethod` (POST/PATCH/DELETE only — never GET/PUT),
 `HANDLER` the handler **class-string**, and `REQUEST` the **FormRequest class-string** that validates the body —
 left out when there is none. Never override the getters.
@@ -322,7 +287,6 @@ use LaravelUi5\Core\Ui5\Enums\HttpMethod;
 class ClearMailboxAction extends AbstractUi5Action
 {
     public const string NAMESPACE = 'com.acme.invoicing.actions.clear-mailbox';
-    public const string VERSION   = '1.0.0';
 
     public const HttpMethod METHOD = HttpMethod::POST;
     public const string HANDLER    = ClearMailboxHandler::class;
@@ -330,28 +294,6 @@ class ClearMailboxAction extends AbstractUi5Action
 }
 </code-snippet>
 @endverbatim
-@else
-Three methods carry the wiring: `getMethod()` returns an `HttpMethod` (POST/PATCH/DELETE only —
-never GET/PUT), `getHandler()` returns the handler **class-string**, and `getRequest()` returns the
-**FormRequest class-string** that validates the body, or `null`.
-
-@verbatim
-<code-snippet name="The action artifact" lang="php">
-use LaravelUi5\Core\Ui5\AbstractUi5Action;
-use LaravelUi5\Core\Ui5\Enums\HttpMethod;
-
-class ClearMailboxAction extends AbstractUi5Action
-{
-    public const string NAMESPACE = 'com.acme.invoicing.actions.clear-mailbox';
-    public const string VERSION   = '1.0.0';
-
-    public function getMethod(): HttpMethod { return HttpMethod::POST; }
-    public function getHandler(): string    { return ClearMailboxHandler::class; }
-    public function getRequest(): ?string    { return ClearMailboxRequest::class; }
-}
-</code-snippet>
-@endverbatim
-@endif
 
 ### 2. Handler — `implements ActionHandlerInterface`, `handle(): array`
 
@@ -406,10 +348,8 @@ outcome on a `BusinessTransaction`. That contract is not available here.)*
 `#[Parameter]` declares a value the route carries into the action. Core's attribute set is
 deliberately small — `Parameter` is the only one — and the declared values arrive as `handle()`
 arguments through the invoker.
-@if (version_compare(\LaravelUi5\Core\CoreLibrary::VERSION, '6.0', '>='))
 Put it on the **action** class, not the handler — the registry refuses it on the handler at boot.
 A resource's goes on the **resource**, not its provider.
-@endif
 
 ## Register the action
 

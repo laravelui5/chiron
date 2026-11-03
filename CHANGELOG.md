@@ -10,8 +10,8 @@ so inline rather than forking the file.
 
 ## [Unreleased]
 
-Written against **odata 4.0** (`odata/ROADMAP.md`, *Next major*). What the OData skill teaches is 4.0 only, so the
-`conflict` bound on `laravelui5/odata` is now `<4.0 || >=5.0` (was `>=4.0`) — a **major** for this package, as 2.0.0
+Written against **odata 4.0** (`odata/CHANGELOG.md`, `[4.0.0]`). What the OData skill teaches is 4.0 only, so the
+`conflict` bound on `laravelui5/odata` is now `<4.0 || >=6.0` (was `>=4.0`; odata 5.0 adds only `cachesMetadataXML()` to the service interface, which nothing here teaches, 2026-11-03) — a **major** for this package, as 2.0.0
 was when it left SDK 1.x. Ships with the odata 4.0 tag and never before it.
 
 - **Two surfaces, nothing in between** (`laravelui5-odata-modeling`, core guideline). A discovered model is described by
@@ -29,6 +29,29 @@ was when it left SDK 1.x. Ships with the odata 4.0 tag and never before it.
   text, `$compute` on declared properties only, function imports in the service document (odata `OP36`, `OP39`,
   `OP40`, `OP11`).
 - A 3.x → 4.0 table in `references/discovery.md`, per removed attribute.
+- **Vocabulary records are typed objects, passed by name** (`references/annotations.md`): `#[LineItem([new DataField(…)])]`
+  instead of a list of strings, record and record-term fields as named arguments, enum cases and flag lists, the value
+  first for an open primitive type (`new Minimum(0)`), and the schema build failing loud on what the vocabulary
+  requires. A `Path` in every term and field; a string for a model-path type, a `Path` only where a SAP client reads one —
+  `CodeList.StandardCode` (odata `OP07`, `OP29`).
+- **`useVocabulary(Vocabulary::CodeList)`** for a service that announces a code list; every shipped vocabulary has its
+  enum case now (odata `OP44`).
+
+Written against **Core 7.0** as well (`core/CHANGELOG.md`, `[7.0.0]`). What the guideline and the skills teach is Core 7
+only, so the `conflict` bound on `laravelui5/core` is now `<7.0 || >=8.0` (was `<4.0 || >=7.0`), and the guards that
+served Core 4–6 side by side (`version_compare(CoreLibrary::VERSION, …)`, which Core 7 removes) are resolved to the
+current branch (2026-11-03). The SDK 3.0 side follows before this ships; it ships with SDK 3.0 and never before it.
+
+- **The version belongs to the module** (core guideline, `laravelui5-modules`; `meta/specs/core/module-artifacts-v1.0.md`
+  D20). Every example drops `VERSION` from the artifact — app, action, card, tile, chart, dashboard, group, report,
+  resource, and the SDK's dialog and command — and the guideline shows it on the module, with the rule: bump it with
+  every release that changes a served file, `ui5:doctor` reports a change without a bump (`core.W7`), and a package
+  with several modules names it once and lets the others refer to it (`VERSION = SdkModule::VERSION`). A card's
+  manifest template reads `$card->getModule()->getVersion()`.
+- **`ArtifactInterface` in a vetoer's signature** (`references/dashboards.md`): `Ui5ArtifactInterface` is gone (D19).
+- **`odata:cache` runs on the development machine, never at deploy** (core guideline, `consuming.md`). Both said *run it
+  on deploy*; the command refuses `production` and `staging`. They now say so, and that it writes the finished
+  `$metadata` document beside the Edm classes — a UI5 app's at `resources/ui5/Metadata.xml` — to be committed with them.
 
 - **The label of a command, job or unit is its artifact title.** The commands and jobs-and-units skills teach `TITLE = '{i18n>commands.<namespace>}'` and its key in the module's bundles. (`meta/specs/ui5/audit-v1.0.md` D5.)
 

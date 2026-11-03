@@ -89,8 +89,9 @@ A custom entity set on a big list is not legacy debt to modernize — it is the 
 
 ### Operational
 
-`php artisan odata:cache` pre-compiles the EDM so no discovery happens at request time. Run it on
-deploy and re-run it after changing a discovered model, an attribute, an annotation, or an
+`php artisan odata:cache` pre-compiles the EDM so no discovery happens at request time, and writes the
+finished `$metadata` document with it. Run it on the development machine and commit what it writes —
+it refuses `production` and `staging` — and re-run it after changing a discovered model, an attribute, an annotation, or an
 installation fact that a bound `ColumnFacetResolverInterface` reads; the cache freezes its answer.
 
 **For anything beyond this — the five-step modelling decision tree, discovery attributes, custom
@@ -104,7 +105,7 @@ entity sets, virtual expands, annotations and code lists, consuming the service 
 **A LaravelUi5 module is a Composer package that contains a UI5 app *and* its backend.** Not a folder
 in the application plus a folder in a frontend repo that have to be deployed in step — one package,
 one name, one version, one `require` line. That is why every URL carries an `@{version}` coordinate:
-the address names a *release* of the bracket.
+the address names a *release* of the bracket, and the version is the **module's**.
 
 ### Never do these
 
@@ -134,7 +135,27 @@ declare; classes do.**
 class InvoicingApp extends AbstractUi5App
 {
     public const string NAMESPACE = 'com.acme.invoicing';
-    public const string VERSION   = '1.0.0';
+}
+</code-snippet>
+@endverbatim
+
+**The version belongs to the module, never to an artifact.** The module class holds it as
+`public const string VERSION`; every artifact of the module runs under it, and an artifact that
+declares a `VERSION` of its own is refused when the registry loads. **Bump it with every release
+that changes a served file** — browsers keep a built file for good under its version, so a change
+without a bump stays unseen. `ui5:doctor` reports one (`core.W7`). A package that ships several
+modules gives them one version: the others refer to the one that holds it.
+
+@verbatim
+<code-snippet name="The version on the module" lang="php">
+class InvoicingModule extends AbstractUi5Module
+{
+    public const string ARTIFACT_ROOT = InvoicingApp::class;
+    public const string VERSION       = '1.4.0';
+
+    public const array ARTIFACTS = [
+        Actions\ApproveInvoiceAction::class,
+    ];
 }
 </code-snippet>
 @endverbatim
@@ -148,7 +169,6 @@ listed in `config/ui5.php` under `modules`. Nothing is wired in a route file, a 
 `ui5:app` · `ui5:action` · `ui5:card` · `ui5:tile` · `ui5:chart` · `ui5:dashboard` · `ui5:group` ·
 `ui5:report` · `ui5:resource` · `ui5:slot` · `ui5:wire` · `ui5:lib` · `ui5:assemble`
 
-@if (version_compare(\LaravelUi5\Core\CoreLibrary::VERSION, '5.0', '>='))
 ### Diagnose before you debug
 
 **Run `php artisan ui5:doctor` after scaffolding, and first when a UI5 app misbehaves** — `failed to load
@@ -156,7 +176,6 @@ listed in `config/ui5.php` under `modules`. Nothing is wired in a route file, a 
 `1`), warnings, notices and skipped rules, each line ending in its fix. Apply the fix it names; do not
 work around a finding. `.ui5-sources.php` is local state and never goes into git. A check only this
 application can make is a rule tagged `DoctorRuleInterface` with an id `host.W<n>`; never edit Core's rules.
-@endif
 
 ### The hierarchy
 

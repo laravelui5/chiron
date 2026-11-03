@@ -73,7 +73,6 @@ use LaravelUi5\Sdk\Ui5\AbstractUi5Dialog;
 class CreateCompanyDialog extends AbstractUi5Dialog
 {
     public const string NAMESPACE = 'com.acme.partners.dialogs.create_company';
-    public const string VERSION = '1.0.0';
     public const string TITLE = 'Create Company';
     public const string DESCRIPTION = 'Create a new company partner.';
     public const string VIEW = 'com.acme.partners.view.dialogs.CreateCompany'; // dotted; the framework slashes it

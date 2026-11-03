@@ -41,7 +41,6 @@ Outside those two, the table above has the answer.
 class HeaderResource extends AbstractUi5Resource
 {
     public const string NAMESPACE = 'com.acme.offers.resources.header';
-    public const string VERSION   = '1.0.0';
 
     public function getProvider(): string { return HeaderProvider::class; }
 }

@@ -28,6 +28,21 @@ application plus a folder in a frontend repo that have to be deployed in step �
 name, one version, one `require` line. That is the whole point of the artifact model, and it is why
 every URL carries an `@{version}` coordinate: the address names a *release* of the bracket.
 
+**The version is the module's.** `ui5:app` and `ui5:lib` write it on the generated module
+(`public const string VERSION`), taken once from the source's `applicationVersion` or `.library`;
+after that it is kept by hand and never re-derived. No artifact declares one — the registry refuses
+an artifact that does. Bump the module's version with every release that changes a served file:
+browsers keep a built file for good under it, and `ui5:doctor` (`core.W7`) reports a change without a
+bump. A package with several modules names the version once and lets the others refer to it:
+
+```php
+class PartnersModule extends AbstractUi5Module
+{
+    public const string ARTIFACT_ROOT = PartnersApp::class;
+    public const string VERSION       = SdkModule::VERSION;
+}
+```
+
 A module holds **an application or a library — never both.** That is enforced by the architecture
 and reflected in the interface.
 

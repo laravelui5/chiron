@@ -22,7 +22,6 @@ reference**; if `sap.m.Panel` has it, the `Panel` DTO takes it.
 class Overview extends AbstractUi5Dashboard
 {
     public const string NAMESPACE   = 'com.acme.sales.dashboards.overview';
-    public const string VERSION     = '1.0.0';
     public const string TITLE       = 'Sales Overview';
     public const string DESCRIPTION = 'Pipeline, performance and this month at a glance';
 
@@ -49,7 +48,6 @@ Override `getVBox()` to customise the root layout — anything except `items`.
 class PerformanceGroup extends AbstractUi5DashboardGroup
 {
     public const string NAMESPACE   = 'com.acme.sales.groups.performance';
-    public const string VERSION     = '1.0.0';
     public const string TITLE       = 'Performance';
     public const string DESCRIPTION = 'Outcomes — quota, revenue mix, and account detail';
 
@@ -90,8 +88,8 @@ answers one question about one artifact:
 
 ```php
 public function dispose(
-    Ui5ArtifactInterface $artifact,
-    Ui5ContextInterface  $context,
+    ArtifactInterface   $artifact,
+    Ui5ContextInterface $context,
 ): Disposition;
 ```
 

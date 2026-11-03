@@ -84,7 +84,6 @@ final class LockPeriodCommand extends AbstractPersonCommand
 final class LockPeriodCommandDeclaration extends AbstractCommand
 {
     public const string NAMESPACE = 'com.acme.billing.commands.lock_period';
-    public const string VERSION = '1.0.0';
     public const string TITLE = '{i18n>commands.com.acme.billing.commands.lock_period}';
     public const string DESCRIPTION = 'Closes a booking period for postings.';
     public const string COMMAND = LockPeriodCommand::class;

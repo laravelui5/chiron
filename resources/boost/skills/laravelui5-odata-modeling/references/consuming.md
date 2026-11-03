@@ -60,8 +60,11 @@ must therefore treat an absent expanded property as normal, not as an error.
 
 ## Caching the schema
 
-`php artisan odata:cache` pre-compiles the EDM to PHP classes so no discovery runs at request time.
-Run it during deployment. Re-run it after changing anything discovery reads: a discovered model, a
+`php artisan odata:cache` pre-compiles the EDM to PHP classes so no discovery runs at request time,
+and writes the finished `$metadata` document beside them (by default `resources/edmx/{Namespace}.xml`;
+a UI5 app's lies in its package at `resources/ui5/Metadata.xml`). **Run it on the development machine
+and commit both** — it refuses `production` and `staging`, and so does `odata:clear`. Re-run it after
+changing anything discovery reads: a discovered model, a
 column, a cast, an attribute, an annotation, the set of discovered models, or an installation fact a
 `ColumnFacetResolverInterface` reads (the resolver's answer is frozen at cache time). Since 3.1 the
 cache reproduces the whole schema, annotations and facets included.

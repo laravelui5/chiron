@@ -12,7 +12,6 @@ Card manifest.
 class RevenueCard extends AbstractUi5Card
 {
     public const string NAMESPACE = 'com.acme.invoicing.cards.revenue';
-    public const string VERSION   = '1.0.0';
 
     public function getProvider(): string { return RevenueProvider::class; }
 }
@@ -51,7 +50,7 @@ card itself is `$card`.
   "sap.app": {
     "id": "{{ $card->getNamespace() }}",
     "type": "card",
-    "applicationVersion": { "version": "{{ $card->getVersion() }}" }
+    "applicationVersion": { "version": "{{ $card->getModule()->getVersion() }}" }
   }
 }
 ```
@@ -77,7 +76,6 @@ round-trip.
 class ProjectKpiTile extends AbstractUi5Tile
 {
     public const string NAMESPACE   = 'com.acme.offers.tiles.project-kpi';
-    public const string VERSION     = '1.0.0';
     public const string TITLE       = 'Project KPI';
     public const string DESCRIPTION = 'Displays aggregated project health indicators';
 

@@ -47,7 +47,6 @@ class reproduces whatever pattern was remembered from an older project.
 class RevenueTile extends AbstractUi5Tile
 {
     public const string NAMESPACE = 'com.acme.invoicing.tiles.revenue';
-    public const string VERSION   = '1.0.0';
 }
 </code-snippet>
 @endverbatim
