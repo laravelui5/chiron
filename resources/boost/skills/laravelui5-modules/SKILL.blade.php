@@ -142,7 +142,9 @@ Only business modules go in this list.)*
 
 The module gets its own `composer.json`: the package name, a PSR-4 root over `src/`, and its service
 provider under `extra.laravel.providers` — for an app, and since core 3.0 for a library too
-(`ui5-charts-lib` → `ui5/Charts` → `acme/charts`). The host then takes it like any package:
+(`ui5-charts-lib` → `ui5/Charts` → `acme/charts`). **Give it `"type": "laravelui5-module"`**: a package
+that ships a module says so, the way a `symfony-bundle` does; Composer installs it like a library. The host then
+takes it like any package:
 
 ```bash
 composer config repositories.invoicing path ui5/Invoicing

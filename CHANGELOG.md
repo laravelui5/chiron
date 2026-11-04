@@ -8,7 +8,33 @@ packages it describes.
 Each release names the majors it was written against. A guideline that only holds for one major says
 so inline rather than forking the file.
 
-## [Unreleased]
+## [3.0.0] - 2026-11-04 – SDK 3.0: modules offer each other services
+
+Written against **odata 4.0 and 5.0 · core 8.0 · sdk 3.0**. A **major**: the `conflict` reads `laravelui5/odata`
+`<4.0 || >=6.0`, `laravelui5/core` `<8.0 || >=9.0` and `laravelui5/sdk` `<3.0 || >=4.0`, so an installation still on
+SDK 2 or Core 7 keeps Chiron 2. Ships with the SDK 3.0 tag and never before it.
+
+### SDK 3.0 and Core 8
+
+- **Released services — `laravelui5-services`, new.** One module uses another through a released service, never
+  through its classes or tables: an operation (`AbstractOperation`, one verb, `#[Call]` mandatory) or a service
+  (`AbstractService`, a facade), a plain `INTERFACE` and a `final` `HANDLER`, `#[Uses]` on the using module and
+  `getService()` from the registry. A released interface is never bound in the container; an extension point is a
+  Laravel service (`bindIf` / `bind`). With `#[BusinessEvent]`, `#[ReadSurface]`, stored files behind
+  `FileDeliveryInterface` at `ui5/files/{ulid}`, `ui5:service` and `ui5:describe --check`. The core guideline gains
+  *Between modules*. (`meta/specs/sdk/weave-services-v1.0.md`, `meta/specs/foundation/files-v1.0.md` FF‑D14.)
+- **Launch tiles** (`laravelui5-shell`). `#[Launchpad('<capability>')]` names the capability alone; at most one launch
+  tile per module, exactly one for a module whose app carries `#[ConceptEntry]`; `#[Category(path:)]` only without a
+  tile. (`meta/specs/sdk/launchpad-v0.9.md` D22–D27.)
+- **Settings on a command or a job** (`laravelui5-settings`): on the declaration, at `EditLevel::Operator`; a unit of
+  work declares none (sdk.W5).
+- **The label of a command, job or unit is its artifact title.** The commands and jobs-and-units skills teach a literal `TITLE` — the developer's English — translated by convention under the namespace (and `<namespace>.description`) in the module's bundles. (`meta/specs/ui5/audit-v1.0.md` D5, `meta/specs/sdk/i18n-v1.0.md` D36, D37.)
+- **Core 8: what the client renders is translated by its namespace** (`laravelui5-artifacts`, dashboards and widgets
+  references). A group's Panel header and a chart's header bind `{i18n><namespace>}` (and `.description`); `TITLE`
+  stays plain English; the keys go in the module's bundles, core.W8 reports a missing one. The `conflict` on
+  `laravelui5/core` moves to `<8.0 || >=9.0`. (`meta/specs/core/dashboard-api-v1.0.md` § Titles bind the namespace.)
+
+### odata 4.0
 
 Written against **odata 4.0** (`odata/CHANGELOG.md`, `[4.0.0]`). What the OData skill teaches is 4.0 only, so the
 `conflict` bound on `laravelui5/odata` is now `<4.0 || >=6.0` (was `>=4.0`; odata 5.0 adds only `cachesMetadataXML()` to the service interface, which nothing here teaches, 2026-11-03) — a **major** for this package, as 2.0.0
@@ -37,10 +63,11 @@ was when it left SDK 1.x. Ships with the odata 4.0 tag and never before it.
 - **`useVocabulary(Vocabulary::CodeList)`** for a service that announces a code list; every shipped vocabulary has its
   enum case now (odata `OP44`).
 
-Written against **Core 7.0** as well (`core/CHANGELOG.md`, `[7.0.0]`). What the guideline and the skills teach is Core 7
-only, so the `conflict` bound on `laravelui5/core` is now `<7.0 || >=8.0` (was `<4.0 || >=7.0`), and the guards that
-served Core 4–6 side by side (`version_compare(CoreLibrary::VERSION, …)`, which Core 7 removes) are resolved to the
-current branch (2026-11-03). The SDK 3.0 side follows before this ships; it ships with SDK 3.0 and never before it.
+### Core 7
+
+What Core 7 changed (`core/CHANGELOG.md`, `[7.0.0]`) is taught as well; the guards that served Core 4–6 side by side
+(`version_compare(CoreLibrary::VERSION, …)`, which Core 7 removes) are resolved to the current branch (2026-11-03). The
+`conflict` bound on `laravelui5/core` went to `<7.0 || >=8.0` with it, and on to `<8.0 || >=9.0` with Core 8 (above).
 
 - **The version belongs to the module** (core guideline, `laravelui5-modules`; `meta/specs/core/module-artifacts-v1.0.md`
   D20). Every example drops `VERSION` from the artifact — app, action, card, tile, chart, dashboard, group, report,
@@ -53,7 +80,6 @@ current branch (2026-11-03). The SDK 3.0 side follows before this ships; it ship
   on deploy*; the command refuses `production` and `staging`. They now say so, and that it writes the finished
   `$metadata` document beside the Edm classes — a UI5 app's at `resources/ui5/Metadata.xml` — to be committed with them.
 
-- **The label of a command, job or unit is its artifact title.** The commands and jobs-and-units skills teach `TITLE = '{i18n>commands.<namespace>}'` and its key in the module's bundles. (`meta/specs/ui5/audit-v1.0.md` D5.)
 
 ## [2.0.0] - 2026-10-27 – SDK 2.0: audited, in the user's language
 

@@ -7,9 +7,9 @@ description: >-
   asking how navigation and the launchpad decide what to show. Covers the five things that must be
   true for an app to get chrome, intent dispatch and why the client holds no URLs, value helps and
   their server-resolved scopes, global search over artifacts, navigation contributors, and the
-  launchpad's never-gated invariant. Triggers: "shell", "LeanShell", "no chrome", "navigation
+  launchpad's never-gated invariant and its launch tiles (`#[Launchpad('<capability>')]`). Triggers: "shell", "LeanShell", "no chrome", "navigation
   rail", "CmdK", "command palette", "value help", "picker", "dispatchIntent", "openValueHelp",
-  "launchpad", "AbstractSdkManifest", "includeIfSdk", "F1 help".
+  "launchpad", "launch tile", "#[Launchpad]", "AbstractSdkManifest", "includeIfSdk", "F1 help".
 license: MIT
 metadata:
   author: laravelui5
@@ -147,6 +147,29 @@ Anyone signed in can reach it, which is what makes it safe to land on — after 
 password reset, and above all after an **impersonation** switch, where the acting partner may have
 access to nothing else. Gating it later would be a breaking change.
 
+## Putting an app on the Launchpad — one launch tile, on one capability
+
+A **launch tile** is an ordinary tile (`ui5:tile`) whose provider returns a `GenericTile` with
+`parameters: ['method' => 'navigate', 'target' => 'app:<namespace>']`, marked with the capability it
+lies on — named **alone**, from the closed catalogue of 13 domains and 48 capabilities:
+
+```php
+#[Launchpad('sales_pipeline', weight: 10)]
+final class OrdersLaunchTile extends AbstractUi5Tile { /* … */ }
+```
+
+- **A capability of the catalogue, and only that.** There is no *General*; an app that fits nothing
+  takes the nearest. The domain follows from the capability. An unknown one is hidden at runtime and
+  fails `ui5:describe --check`.
+- **At most one launch tile per module** — and **exactly one** when the module's app carries
+  `#[ConceptEntry]`.
+- **The tile follows its app's `#[Access]`.** Do not authorize the tile; it is hidden when the actor
+  may not open the target.
+- `weight` orders tiles on one capability, higher first. The launcher shows one panel per occupied
+  capability, in the catalogue's order.
+- The capability is also the package's place in the marketplace. Only a package without a launch tile
+  — a library — names it with `#[Category(path: '<capability>')]`; never both.
+
 ## Related
 
 Modal create/edit interactions are **global dialogs** — same artifact idea, same shell hosting,
@@ -158,6 +181,8 @@ without the return channel. Use the **`laravelui5-dialogs`** skill.
 - **Do not filter navigation entries yourself.** The projection against abilities does it.
 - **Do not open a value help without a scope**, or send a filter from the client.
 - **Do not put an `#[Access]` on the Launchpad.**
+- **Do not write `domain/capability` in `#[Launchpad]`** — the capability alone.
+- **Do not give a module a second launch tile.**
 - **Do not expect chrome from an app extending Core's `AbstractManifest`**, or from one that never
   calls `LaravelUi5.init()`.
 @endif

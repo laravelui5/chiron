@@ -292,6 +292,18 @@ audited command, audited job) composes units of work; a unit of work composes pl
   `automation_actor` names, any type, set by the operator; by default Pragmatiqu IT's support department, which
   `ui5:intake` writes. A new database: `ui5:intake` → `ui5:sync` → `ui5:tenant`.
 
+### Between modules — released services
+
+**A module never reaches into another**: not its handler classes, not its models for writing, not its
+tables past what it released. What one module offers another is a **released service** — an
+operation (`AbstractOperation`, one verb, `#[Call]` mandatory) or a service (`AbstractService`, a
+facade) with a plain `INTERFACE` and a `final` `HANDLER`. The user declares it with `#[Uses]` on its
+module and takes it with `ServiceRegistryInterface::getService()`, guarded per call. **A released
+interface is never bound in the container**; an extension point meant to be replaced is a Laravel
+service instead — the owner binds with `bindIf`, a replacement with `bind`. Stored files are served by
+the SDK at `ui5/files/{ulid}` behind `FileDeliveryInterface`. Scaffold with `ui5:service`; check with
+`ui5:describe --check`. Use the **`laravelui5-services`** skill.
+
 ### Audited tables
 
 - **`#[Audited(fields: [...], key: ...)]`** on every table people decide on — every **Configuration**

@@ -142,7 +142,8 @@ class RevenueTrendChartProvider implements ChartProviderInterface
 ```
 
 The canvas carries the engine and its option object; the surrounding `Chart` carries header,
-layout and sizing. `layoutData` is how it sits in a dashboard grid.
+layout and sizing. Without a header of its own, the chart's header binds `{i18n><namespace>}` (title) and
+`{i18n><namespace>.description}` (subtitle): put both keys in the module's bundles. `layoutData` is how it sits in a dashboard grid.
 
 ## Choosing between them
 

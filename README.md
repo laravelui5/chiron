@@ -53,7 +53,9 @@ resources/boost/
     ├── laravelui5-security/           time-aware RBAC: #[Access], #[Act], See, #[Read], scoped roles
     ├── laravelui5-partners/           the partner model: the actor, org partners, the four "roles"
     ├── laravelui5-settings/           Setting vs Slot vs Customizing, and how each is declared
-    └── laravelui5-shell/              LeanShell: navigation, command palette, help, value helps, intents
+    ├── laravelui5-services/           one module using another: operations, services, #[Uses], files
+    └── laravelui5-shell/              LeanShell: navigation, command palette, help, value helps, intents,
+                                       the Launchpad and its launch tiles
 ```
 
 For the same reason it declares **no `require`**. Nothing here is executed, so nothing here has a
@@ -111,9 +113,9 @@ the next one, and for a major whose forms it no longer teaches, the earlier ones
 
 ```json
 "conflict": {
-    "laravelui5/odata": ">=4.0",
-    "laravelui5/core": "<4.0 || >=5.0",
-    "laravelui5/sdk": ">=2.0"
+    "laravelui5/odata": "<4.0 || >=6.0",
+    "laravelui5/core": "<8.0 || >=9.0",
+    "laravelui5/sdk": "<3.0 || >=4.0"
 }
 ```
 

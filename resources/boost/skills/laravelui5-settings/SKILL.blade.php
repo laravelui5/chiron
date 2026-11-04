@@ -81,6 +81,11 @@ Since core 3.0 the artifact's settings are injected into every handler and provi
 `AbstractConfigurable` — Action, Resource, Card, Tile, Chart and Report alike (on core 2.x, Tile,
 Chart and Report providers got none). Settings are read-only: writing `$this->pageSize = 5` throws.
 
+**On a command or a job, declare it on the declaration** — where `#[Act]` sits — at
+`EditLevel::Operator`: a run is not personalized like a request, so a value for every run belongs to
+the installation. **A unit of work declares no setting**: its context is its trigger's, so nothing would
+read it; `ui5:doctor` reports one (`sdk.W5`).
+
 ## `#[Slot]` — declare it on the module
 
 Repeatable, and it mirrors the `#[Role]` convention. The registry harvests slots at boot and

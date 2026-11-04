@@ -63,8 +63,11 @@ class PerformanceGroup extends AbstractUi5DashboardGroup
 ```
 
 `getChildNamespaces()` is the **only abstract method**; everything else has a working default —
-a `sap.m.Panel` with `headerText` bound to the title, and a bare `sap.f.GridContainer`. Array order
-is display order.
+a `sap.m.Panel` whose `headerText` binds the group's **namespace** in the app's bundle
+(`{i18n>com.acme.sales.groups.performance}`), and a bare `sap.f.GridContainer`. Array order is display order.
+`TITLE` stays plain English for the reader of the code; put `<namespace>=<title>` in the module's bundles, en and de —
+a missing key shows as the key, and `php artisan ui5:doctor` reports it (core.W8). Never write `TITLE = '{i18n>…}'`
+for this; it is only kept for an explicit key.
 
 The list need not be literal. It is resolved per request, so a group may compute it — the LUX
 Launchpad harvests every tile carrying a placement marker and returns the namespaces sorted by

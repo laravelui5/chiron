@@ -84,15 +84,17 @@ final class LockPeriodCommand extends AbstractPersonCommand
 final class LockPeriodCommandDeclaration extends AbstractCommand
 {
     public const string NAMESPACE = 'com.acme.billing.commands.lock_period';
-    public const string TITLE = '{i18n>commands.com.acme.billing.commands.lock_period}';
+    public const string TITLE = 'Lock period';
     public const string DESCRIPTION = 'Closes a booking period for postings.';
     public const string COMMAND = LockPeriodCommand::class;
 }
 ```
 
 One `commands` segment in the namespace. A command no module declares is refused when it runs. The
-`#[Act]` needs `abilities.act.<name>.title` / `.description` in the module's bundle, en and de. The title's key,
-`commands.<namespace>`, is the command's label in the change log: put it there too.
+`#[Act]` needs `abilities.act.<name>.title` / `.description` in the module's bundle, en and de. The `TITLE` is a
+literal, the developer's English; its translation is found under the namespace,
+`com.acme.billing.commands.lock_period=…` (and `<namespace>.description`), the command's label in the change log:
+put it there too.
 
 ## Never
 
