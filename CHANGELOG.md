@@ -34,7 +34,7 @@ SDK 2 or Core 7 keeps Chiron 2. Ships with the SDK 3.0 tag and never before it.
   stays plain English; the keys go in the module's bundles, core.W8 reports a missing one. The `conflict` on
   `laravelui5/core` moves to `<8.0 || >=9.0`. (`meta/specs/core/dashboard-api-v1.0.md` § Titles bind the namespace.)
 
-### odata 4.0
+### OData 4.0
 
 Written against **odata 4.0** (`odata/CHANGELOG.md`, `[4.0.0]`). What the OData skill teaches is 4.0 only, so the
 `conflict` bound on `laravelui5/odata` is now `<4.0 || >=6.0` (was `>=4.0`; odata 5.0 adds only `cachesMetadataXML()` to the service interface, which nothing here teaches, 2026-11-03) — a **major** for this package, as 2.0.0
