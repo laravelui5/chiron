@@ -8,6 +8,14 @@ packages it describes.
 Each release names the majors it was written against. A guideline that only holds for one major says
 so inline rather than forking the file.
 
+## [Unreleased]
+
+### Core 8.1
+
+- **A library that serves data** (`laravelui5-modules`): `AbstractUi5ODataLibrary`, `MODEL`, the model an app gets for
+  every service library it names in `getResourceNamespaces()`; never in the app's manifest by hand. (Core ROADMAP
+  `OP93`, `meta/specs/foundation/foundation-v1.0.md` D297.)
+
 ## [3.0.0] - 2026-11-04 – SDK 3.0: modules offer each other services
 
 Written against **odata 4.0 and 5.0 · core 8.0 · sdk 3.0**. A **major**: the `conflict` reads `laravelui5/odata`

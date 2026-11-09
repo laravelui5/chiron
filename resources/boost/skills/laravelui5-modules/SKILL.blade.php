@@ -209,6 +209,14 @@ degrades predictably:
 > the action, `#[Read]` on the entity set). Never let a `can()` check be the only thing between an
 > actor and an operation.
 
+## A library that serves data
+
+Since core 8.1 a library can also be an OData service: extend `AbstractUi5ODataLibrary`, declare its sets in
+`configure()` and its model name in `public const string MODEL`. Every app that lists the library in
+`getResourceNamespaces()` gets the data source `<model>Service` and the model `<model>` in its manifest — **never add
+them to the app's `manifest.json` by hand**; a name the app already uses is refused. A plain `AbstractUi5Library` is no
+service. Use it for data many apps share (code lists), never to dodge an app's own service.
+
 ## A UI5 library must be declared in TWO places
 
 This is the single most common runtime failure. After a fresh `yo easy-ui5` scaffold you get a
