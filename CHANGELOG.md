@@ -10,6 +10,24 @@ so inline rather than forking the file.
 
 ## [Unreleased]
 
+### SDK 3.4
+
+- **Refusals answered by the runner** (`laravelui5-actions`): `BusinessRefusalInterface` — a refusal thrown anywhere
+  inside a unit of work rolls it back and answers 422 with its text; no `catch` in the handler.
+  (`meta/specs/sdk/audited-execution-v1.0.md` D43, SDK ROADMAP `OP104`.)
+
+### SDK 3.3
+
+- **Messages from inside a unit of work** (`laravelui5-jobs-and-units`): `UnitMessagesInterface` for code that runs
+  in a unit without holding its transaction — an observer, a trait, a service; `info()` and `warning()` only, beside
+  the handler's own messages. (`meta/specs/sdk/audited-execution-v1.0.md` D42, SDK ROADMAP `OP103`.)
+
+### Core 8.2
+
+- **An action takes an upload** (`laravelui5-actions`): `LaravelUi5.upload()` for a body that carries files — the
+  same signature as `call()`, sent as multipart, POST actions only; the file is a FormRequest field with a `file`
+  rule, read as an `UploadedFile` off `validated()`. (Core ROADMAP `OP96`.)
+
 ### Core 8.1
 
 - **A library that serves data** (`laravelui5-modules`): `AbstractUi5ODataLibrary`, `MODEL`, the model an app gets for

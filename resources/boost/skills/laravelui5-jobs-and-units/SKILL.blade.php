@@ -66,6 +66,10 @@ final class DunInvoiceUnit implements WorkUnitInterface
 - Declared like any artifact (`AbstractWorkUnit`, one `units` segment, `UNIT` naming the class); the
   runner **refuses an undeclared unit**.
 - Run it: `$runner->run($unit, new BusinessContext(parameters: [...], validated: [...]), $sdk)`.
+- **Messages from code that does not hold the transaction** — a model's observer, a trait, a service:
+  inject `UnitMessagesInterface` and call `info()` / `warning()` (SDK 3.3). They land beside the
+  handler's own messages. Never pass the `BusinessTransaction` down into a model or a service, never
+  `app(BusinessTransaction::class)`; a refusal is an exception, not a message.
 
 ## An audited job
 

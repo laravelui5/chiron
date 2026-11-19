@@ -120,6 +120,10 @@ class UpdateGroupHandler implements SdkActionHandlerInterface
   and the business log records it under that key.
 - Both take a **`MessageText`** only — a key in the app's bundle, resolved on the server in the user's
   language. **Never a string**, not even an exception's message: give the exception a key of its own.
+- **A refusal thrown deeper down** (SDK 3.4) — by a model's observer, a service — implements
+  `BusinessRefusalInterface` (`refusal(): MessageText`); the runner rolls back and answers it as a 422.
+  **Do not catch it** to translate it; catch it only to add to it (`rollback($e->refusal())`). Your own
+  refusal exceptions implement the interface instead of being caught in every handler.
 - `$transaction->touched('/EntitySet')` — mark OData paths the client should refresh post-commit.
 - `$transaction->info(MessageText::of('messages.<...>', [$param]))` — attach a business message. Its
   key lives in the app's bundle; the server resolves it and the response carries `text` beside `key`
@@ -223,6 +227,11 @@ class CreateGroupAction extends AbstractUi5Action { /* … */ }
   `params` fill the `{placeholder}` tokens; `body` is the JSON payload. `DELETE` carries a body
   too. The resolved response carries the commit `message` (toast), the `touched` refresh hints,
   and any business `messages`. A call to a name not in the manifest throws on the frontend.
+- **Upload** (Core 8.2): a body with a file goes with `LaravelUi5.upload(namespace, params, body)`
+  — same signature and response handling as `call`, sent as multipart. The file is a body field
+  with a `file` rule in the FormRequest; the handler reads an `UploadedFile` off
+  `$context->validated()`. **POST actions only** — `upload()` refuses PATCH and DELETE. Never
+  base64 a file into a JSON body, never hand-build `FormData` with `fetch`.
 
 ## Verify
 
