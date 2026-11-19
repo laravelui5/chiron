@@ -74,7 +74,7 @@ Mixing these up costs an afternoon. Ask which question you are answering:
 |:---|:---|:---|:---|
 | **System level** | where does this partner stand in the installation | `sdk_partners.system_level` | **no** |
 | **Role** | what may this partner **do** | `sdk_role_assignments` | **yes** — with abilities and groups |
-| **Membership** | whom does this partner **stand for** | `sdk_partner_relationships`: `employed_by` (employment) or `acts_for` (by commission) | no, but it **scopes data** |
+| **Membership** | whom does this partner **stand for** | `sdk_partner_relationships`: `employed_by` (employment, always at the organisation) or `acts_for` (by commission); the department a person works in is `member_of` | no, but it **scopes data** |
 | **Partner role** | what **function** does this partner have in the business | `sdk_partner_role_assignments` | no |
 
 And the fourth splits again, by the catalog row's `PartnerRoleScope`:
@@ -144,6 +144,16 @@ The SDK ships `employed_by`, `acts_for`, `owns`, `shareholder_of`, `member_of`, 
 `affiliate_of` and the three rungs of a tenant's ladder (`LadderRung`: `operator_for`, `consultant_for`,
 `it_contact_for` — one holder per rung at a time; the Partners app refuses a second).
 
+**A person is `employed_by` its organisation directly, never by a department** — the department is `member_of`. Since
+SDK 3.5 an employment at a department is refused (`EmploymentAtDepartmentException`, 422): it would make the department the
+person's organisation, and everything scoped to it would see the department instead of the company.
+
+**What held is ended, never deleted** (since SDK 3.5). Relationships, classifications and contacts are dated rows; removing one that
+has held sets its `valid_until`, only a row that never held is deleted. An edit changes only what describes an edge
+(the function title); a different primary flag ends the edge and begins a new one; a different **type** is refused
+(`RelationshipTypeByEndException`) — end it and create one of the other type. The same edge twice at the same time is
+refused (`OverlappingValidityException`); one after the other is fine. Relationships are audited.
+
 They are the **vocabulary**, not the assignments. See the `laravelui5-settings` skill,
 `references/customizing.md` — and never write to those tables at runtime, because the next sync
 deletes undeclared rows.
@@ -158,6 +168,9 @@ deletes undeclared rows.
   tenant are found by key and relationship; the automation actor by the setting's e-mail.
 - **Do not treat a `customer` or `supplier` classification as a permission.**
 - **Do not call `orgPartners()` without the time** — employment windows are why it takes one.
+- **Do not employ a person by a department.** `employed_by` the organisation, `member_of` the department.
+- **Do not delete a relationship or a classification that has held.** End it; the history is what the Foundation and
+  the audit read.
 - **Do not model a login as a partner**, or delete a partner to remove access. Delete the login
   object.
 @endif

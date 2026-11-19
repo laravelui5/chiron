@@ -8,7 +8,25 @@ packages it describes.
 Each release names the majors it was written against. A guideline that only holds for one major says
 so inline rather than forking the file.
 
-## [Unreleased]
+## [3.1.0] - 2026-11-19 – SDK 3.5: one package, the marked surface, employment with a history
+
+Written against **odata 5.1 · core 8.2 · sdk 3.5**. A **minor**: the `conflict` is unchanged — it guards majors —,
+and what holds only from a minor on says so inline (*since SDK 3.5*, *since Core 8.2*). Ships with the SDK 3.5 tag and
+never before it. What a module can take at a tenant's birth (`#[MasterData]`,
+`#[OpeningRecord]`) is taught where it is used — in Pholos, with the Foundation's loading commands —, not here.
+
+### SDK 3.5
+
+- **One package** (the SDK guideline): the tables come with `laravelui5/sdk`; `laravelui5/sdk-db` is folded back and
+  replaced — never required. (`meta/specs/sdk/tms-v1.0.md` ST‑D7.)
+- **`#[Audited]` is all it takes** (the SDK guideline): the SDK finds audited models in the roots of the modules in
+  play and in `app/`; no entry in `ui5.audit.models`, which only adds until 4.0; `ui5:doctor` `sdk.W7`. (SDK ROADMAP
+  `OP106`.)
+- **Use only what the SDK marks `@api`** (the SDK guideline): a module or a host uses the marked surface; unmarked is
+  internal from 4.0; models release only their `#[ReadSurface]`. (SDK ROADMAP `OP93`.)
+- **Employment and history** (`laravelui5-partners`): `employed_by` the organisation, `member_of` the department, an
+  employment at a department refused; what held is ended, never deleted; a type is not changed in place; no two equal
+  edges at a time. (SDK ROADMAP `OP99`, `OP100`, `OP101`.)
 
 ### SDK 3.4
 

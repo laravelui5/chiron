@@ -215,8 +215,10 @@ suppliers, the shell, and a DB-backed registry.
 The SDK's registry is **database-backed**. Abilities, roles and the metadata catalog are projected
 from the code into tables by `php artisan ui5:sync`, and a row's id does not exist until it has run.
 
-**The tables come with `laravelui5/sdk-db`**, which the SDK requires at its own version: never require it
-yourself, and update the pair together with `composer update laravelui5/sdk -W`.
+**The tables come with `laravelui5/sdk` itself** (since SDK 3.5; before, with `laravelui5/sdk-db` at the SDK's own
+version) — its baseline migrations and its models. `laravelui5/sdk-db`, the
+former second package, is folded back and **replaced** by the SDK: never require it; `composer update laravelui5/sdk
+-W` drops it from the lock.
 
 **`migrate → sync → cache`, in that order, every deploy.** It is a hard contract, not a
 recommendation: `ui5:cache` writes references that carry DB ids, so caching before syncing caches
@@ -292,6 +294,15 @@ audited command, audited job) composes units of work; a unit of work composes pl
   `automation_actor` names, any type, set by the operator; by default Pragmatiqu IT's support department, which
   `ui5:intake` writes. A new database: `ui5:intake` → `ui5:sync` → `ui5:tenant`.
 
+### Use only what the SDK marks `@api`
+
+*Since SDK 3.5, which marks its surface.*
+
+A module or a host uses the SDK's classes that carry **`@api`** in their docblock: the interfaces it binds, implements
+or calls, the attributes, the bases it extends, and the types in their signatures. Everything else is the SDK's own —
+from SDK 4.0 an unmarked class is internal and may change in a minor. Models are no `@api`: what a model releases is
+its `#[ReadSurface]`. (The Foundation and its apps, and the SDK's own apps, are exempt.)
+
 ### Between modules — released services
 
 **A module never reaches into another**: not its handler classes, not its models for writing, not its
@@ -313,8 +324,11 @@ the SDK at `ui5/files/{ulid}` behind `FileDeliveryInterface`. Scaffold with `ui5
   runner. A write outside every unit of work inside a request, command or job fails a test (`source` Unmanaged in
   production). A migration or a `db:seed` run that writes an audited table needs no unit of work: it leaves one
   change-log head with `source` Migration, under the automation actor.
-- **List every `#[Audited]` model in `ui5.audit.models`** (the SDK's own are built in); a package appends its own in
-  its service provider. The write rule needs the list: a query-builder write on a listed table fails a test.
+- **`#[Audited]` on the model is all it takes** (since SDK 3.5; before, list it in `ui5.audit.models`). The SDK finds every audited model in the PSR-4 root of a module in
+  play and in the host's `app/` — keep an audited model there, not in a folder no module owns. Do not list it in
+  `ui5.audit.models`; that key only adds, and goes with SDK 4.0. After adding `#[Audited]`, run `ui5:cache` where the
+  cached registry is bound — `ui5:doctor` (`sdk.W7`) reports a stale list. A query-builder write on an audited table
+  fails a test.
 - **A Customizing catalog never carries `#[Audited]`.** It is vocabulary the code declares and
   `ui5:sync` mirrors. Configuration is audited; Customizing is not. Do not mix the two words.
 - **One table, one owner:** it mirrors code or holds people's decisions, never both.
