@@ -296,11 +296,11 @@ audited command, audited job) composes units of work; a unit of work composes pl
 
 ### Use only what the SDK marks `@api`
 
-*Since SDK 3.5, which marks its surface.*
+*Since SDK 3.5, which marks its surface; binding since SDK 4.0.*
 
 A module or a host uses the SDK's classes that carry **`@api`** in their docblock: the interfaces it binds, implements
 or calls, the attributes, the bases it extends, and the types in their signatures. Everything else is the SDK's own —
-from SDK 4.0 an unmarked class is internal and may change in a minor. Models are no `@api`: what a model releases is
+since SDK 4.0 an unmarked class is internal and may change in a minor. Models are no `@api`: what a model releases is
 its `#[ReadSurface]`. (The Foundation and its apps, and the SDK's own apps, are exempt.)
 
 ### Between modules — released services
@@ -315,6 +315,17 @@ service instead — the owner binds with `bindIf`, a replacement with `bind`. St
 the SDK at `ui5/files/{ulid}` behind `FileDeliveryInterface`. Scaffold with `ui5:service`; check with
 `ui5:describe --check`. Use the **`laravelui5-services`** skill.
 
+### What needs a person — work items
+
+*Since SDK 4.0.*
+
+What does not fix itself — a missing tariff, an imminent loss, a failed run — goes to the **inbox**: a rule
+(`WorkItemRuleInterface`, tagged in the container) returns `WorkItemFinding`s, and `ui5:work-items` reconciles them,
+each rule in a unit of work of its own. **Never copy a process's routine queue into it** — drafts to book, a statement
+to settle stay in the app that owns them. Address a finding to a role (`#[Role]`'s case), for a scoped role with the
+model the role is held on; the text is free text in the tenant's base language. Use the **`laravelui5-work-items`**
+skill.
+
 ### Audited tables
 
 - **`#[Audited(fields: [...], key: ...)]`** on every table people decide on — every **Configuration**
@@ -324,9 +335,9 @@ the SDK at `ui5/files/{ulid}` behind `FileDeliveryInterface`. Scaffold with `ui5
   runner. A write outside every unit of work inside a request, command or job fails a test (`source` Unmanaged in
   production). A migration or a `db:seed` run that writes an audited table needs no unit of work: it leaves one
   change-log head with `source` Migration, under the automation actor.
-- **`#[Audited]` on the model is all it takes** (since SDK 3.5; before, list it in `ui5.audit.models`). The SDK finds every audited model in the PSR-4 root of a module in
-  play and in the host's `app/` — keep an audited model there, not in a folder no module owns. Do not list it in
-  `ui5.audit.models`; that key only adds, and goes with SDK 4.0. After adding `#[Audited]`, run `ui5:cache` where the
+- **`#[Audited]` on the model is all it takes** (since SDK 3.5). The SDK finds every audited model in the PSR-4 root of a module in
+  play and in the host's `app/` — keep an audited model there, not in a folder no module owns. The key
+  `ui5.audit.models` is gone since SDK 4.0 and ignored when set. After adding `#[Audited]`, run `ui5:cache` where the
   cached registry is bound — `ui5:doctor` (`sdk.W7`) reports a stale list. A query-builder write on an audited table
   fails a test.
 - **A Customizing catalog never carries `#[Audited]`.** It is vocabulary the code declares and

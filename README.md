@@ -54,8 +54,9 @@ resources/boost/
     ├── laravelui5-partners/           the partner model: the actor, org partners, the four "roles"
     ├── laravelui5-settings/           Setting vs Slot vs Customizing, and how each is declared
     ├── laravelui5-services/           one module using another: operations, services, #[Uses], files
-    └── laravelui5-shell/              LeanShell: navigation, command palette, help, value helps, intents,
-                                       the Launchpad and its launch tiles
+    ├── laravelui5-shell/              LeanShell: navigation, command palette, help, value helps, intents,
+    │                                  the Launchpad and its launch tiles
+    └── laravelui5-work-items/         the inbox: rules for what needs a person, ui5:work-items, the addressee
 ```
 
 For the same reason it declares **no `require`**. Nothing here is executed, so nothing here has a

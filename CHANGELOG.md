@@ -8,6 +8,26 @@ packages it describes.
 Each release names the majors it was written against. A guideline that only holds for one major says
 so inline rather than forking the file.
 
+## [4.0.0] - 2026-11-22 – SDK 4.0: the inbox
+
+Written against **odata 5.1 · core 8.2 · sdk 4.0**. A **major**: the `conflict` reads `laravelui5/sdk` `<4.0 || >=5.0`,
+so an installation still on SDK 3 keeps Chiron 3. Ships with the SDK 4.0 tag and never before it.
+
+### SDK 4.0
+
+- **Work items — `laravelui5-work-items`, new.** What does not fix itself goes to the inbox: a rule
+  (`WorkItemRuleInterface`, tagged) returns `WorkItemFinding`s, `ui5:work-items` reconciles them, each rule in a unit
+  of work of its own. Only exceptions and hand-overs — never a process's routine queue. The addressee is a role,
+  optionally a partner, for a scoped role the model it is held on (never a morph key); the text is free text in the
+  tenant's base language; `forPerson()` reads direct role assignments only. The SDK does not schedule the run.
+  (`meta/specs/sdk/work-items-v1.0.md`.)
+- **The SDK guideline** points at the skill (*What needs a person — work items*).
+- **Only `@api` is promised** — the rule binds since SDK 4.0, the guideline says so in the present tense. (SDK
+  ROADMAP `OP93`.)
+- **`ui5.audit.models` is gone** — the guideline no longer names it as an addition. (SDK ROADMAP `OP106`.)
+- **One registry interface for the loadable data** — `LoadableDataRegistryInterface`; Chiron never taught the folded
+  one (the loading commands are the Foundation's, taught in Pholos). (SDK ROADMAP `OP107`.)
+
 ## [3.1.0] - 2026-11-19 – SDK 3.5: one package, the marked surface, employment with a history
 
 Written against **odata 5.1 · core 8.2 · sdk 3.5**. A **minor**: the `conflict` is unchanged — it guards majors —,
