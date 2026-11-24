@@ -88,6 +88,51 @@ is written. `--refresh` needs none. A library takes its vendor from `.library`, 
 Then patch the library dependencies — see *A UI5 library must be declared in TWO places* below. That
 is the first thing to do after **every** fresh scaffold, before building.
 
+**For an app, five things by hand after every fresh scaffold, before `ui5:app`** — the generator knows none of them:
+
+1. **The UI5 version of the host.** An app builds, lints and types against the version the host serves it with
+   (`config/ui5.php` → `version`), not the newest the generator offers: `ui5.yaml` `framework.version`,
+   `manifest.json` `sap.ui5/dependencies/minUI5Version`, and `@openui5/types` installed at that version. An app whose
+   `minUI5Version` is above the host's warns at runtime and is linted against APIs the host does not have. (On an
+   older version, drop what the template brings that it does not know — e.g. the `SuiteConfiguration` type import in
+   `webapp/test/testsuite.qunit.ts`, which `@openui5/types` 1.136 lacks.)
+2. **Manifest version 2.** Set `"_version": "2.0.0"` in `webapp/manifest.json`; Easy UI5 still writes `1.x`, and
+   `ui5lint --fix` does not migrate it. Version 2 forbids `sap.ui5/resources/js` and `viewPath`/`viewName`/`viewId`
+   in routing targets (`path`/`name`/`id` instead) and creates router, root view and nested XML views async. A fresh
+   scaffold meets all of that — the migration is the one line. Core's server-side manifest parts are unaffected.
+3. **`@laravelui5/core` as a dev dependency**, for its types — at runtime Core serves the library:
+   ```bash
+   npm install -D @laravelui5/core
+   ```
+   and add `"@laravelui5/core"` to `compilerOptions.types` in `tsconfig.json`.
+4. **`LaravelUi5.init(this)` in `Component.ts`**, routing in its `then` — see *The frontend contract* below:
+   ```ts
+   import LaravelUi5 from "com/laravelui5/core/LaravelUi5";
+   // in init(), after super.init():
+   LaravelUi5.init(this).then(() => {
+       this.getRouter().initialize();
+   }).catch((error: unknown) => {
+       console.error(error);
+   });
+   ```
+
+5. **One command that must be green — `check`.** In `package.json`, beside `lint` (ESLint alone) and `ui5lint`:
+   ```json
+   "check": "npm run ts-typecheck && npm run lint && npm run ui5lint",
+   "test": "npm run check && npm run test-ui5"
+   ```
+   and `@eslint/js` as a dev dependency (`npm install -D @eslint/js`) — `eslint.config.mjs` imports it, and since
+   ESLint 10 it no longer comes along transitively: without it ESLint stops with `ERR_MODULE_NOT_FOUND` and the lint is
+   silent. Fix a finding in the code; never switch a rule off to get green.
+
+Then `npm run check` and `ui5 build` are green, and `ui5:doctor` has no core.W3 to report.
+
+**A UI5 library of your own** (JavaScript, `src/library.js`) initialises through `sap/ui/core/Lib` —
+`Library.init({ apiVersion: 2, name, version, dependencies, … })`, returning what it returns — not
+`sap.ui.getCore().initLibrary(...)`; texts through `Library.getResourceBundleFor(name)`, not
+`sap.ui.getCore().getLibraryResourceBundle(...)`. `apiVersion: 2` only asks that enum types be registered with
+`DataType.registerEnum`. Its `check` is `npm run lint && npm run ui5lint`.
+
 `ui5:app` runs `npm run build` for you; `--no-build` skips that when you have just built.
 
 ## The namespace has exactly one source

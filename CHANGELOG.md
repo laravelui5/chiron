@@ -8,6 +8,19 @@ packages it describes.
 Each release names the majors it was written against. A guideline that only holds for one major says
 so inline rather than forking the file.
 
+## [4.1.0] - 2026-11-24 – A fresh app: what the generator does not know
+
+Written against **odata 5.1 · core 8.2 · sdk 4.1**. A **minor**: guidance added, nothing changed.
+
+### Added
+
+- **`laravelui5-modules` — five things by hand after every fresh app scaffold, before `ui5:app`:** the host's UI5
+  version (`ui5.yaml`, `minUI5Version`, `@openui5/types`), manifest version 2 (`"_version": "2.0.0"`; Easy UI5 writes
+  `1.x`, `ui5lint --fix` does not migrate it; the rules version 2 enforces), `@laravelui5/core` as a dev dependency for
+  its types, and `LaravelUi5.init(this)` before routing in `Component.ts`. Learnt on the Foundation's first module,
+  Billing (Foundation D412; `meta/atoms/UI5_APP_FORMAT.md`).
+- **`laravelui5-modules` — the fifth: one command that must be green.** `check` = `ts-typecheck`, `lint` (ESLint), `ui5lint`; `test` runs it first; `@eslint/js` as a dev dependency (since ESLint 10 no longer transitive — without it the lint is silent). And a UI5 library of one's own initialises with `Lib.init({ apiVersion: 2, … })` and reads its texts with `Lib.getResourceBundleFor`, not through `sap.ui.getCore()`.
+
 ## [4.0.0] - 2026-11-22 – SDK 4.0: the inbox
 
 Written against **odata 5.1 · core 8.2 · sdk 4.0**. A **major**: the `conflict` reads `laravelui5/sdk` `<4.0 || >=5.0`,
